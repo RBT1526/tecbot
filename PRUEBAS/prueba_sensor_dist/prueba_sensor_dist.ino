@@ -2,8 +2,8 @@ void setup(){
     Serial.begin(115200);
 }
 void loop(){
-    float adc = analogRead(A0);
-    float cm = pow(3027.4 / adc, 1.2134);
-    Serial.println(cm);
-    delay(10);
+    int s = analogRead(A0);
+    int dist= pow(10,log10(s/1821.2)/-0.65);
+    Serial.println(dist);
+    delay(100);
 }
