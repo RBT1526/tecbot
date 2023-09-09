@@ -73,6 +73,5 @@ for (int i=0; i<256; i++) {
 
 void loop()
 {
-  delay(100);
   leerColor();
 }
