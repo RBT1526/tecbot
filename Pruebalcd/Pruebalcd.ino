@@ -1,13 +1,9 @@
-//YWROBOT
-//Compatible with the Arduino IDE 1.0
-//Library version:1.1
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 #include "Adafruit_TCS34725.h"
 
-
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
-//cosas del color
+//cosas del sensor de color
 #define commonAnode true
 byte gammatable[256];
 #define redpin 3
@@ -18,16 +14,13 @@ Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS3472
 void leerColor(){
   //rutina para leer color
   int IR = analogRead(A3);
-
   float red, green, blue;  
   tcs.setInterrupt(false);  // turn on LED
-  delay(60);  // takes 50ms to read
   tcs.getRGB(&red, &green, &blue);
   tcs.setInterrupt(true);  // turn off LED
 
   lcd.clear();
-  lcd.setCursor(0,0);
-  
+  lcd.setCursor(0,0);  
   if(green>100 && IR>500){
     lcd.print("NEGRO");
   }else if(red>100){
@@ -49,8 +42,6 @@ void setup()
   tcs.begin();
   lcd.init();
   lcd.backlight();
-  /*lcd.setCursor(0,0);
-  lcd.print("Hello, world!");*/
 
   #if defined(ARDUINO_ARCH_ESP32)
   ledcAttachPin(redpin, 1);
