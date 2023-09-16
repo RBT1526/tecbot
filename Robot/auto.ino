@@ -16,7 +16,7 @@ int soli=0;
 int colores[3]={0,0,0}; // 0 azul 1 rojo 2 verde
 int targetColor=2;
 
-void leerColor(){
+int leerColor(){
   //rutina para leer color
   int IR = analogRead(A3);
   float red, green, blue;  
@@ -28,17 +28,26 @@ void leerColor(){
   lcd.setCursor(0,0);  
   if(green>100 && IR>500){
     lcd.print("NEGRO");
+    //dejar de avanzar
+    return 5;
   }else if(red>100){
-    lcd.print("RED");    
+    colores[1]+=1;
+    lcd.print("ROJO");
+    return 3;    
   }else if(green>100){
-    lcd.print("GREEN");
+    colores[2]+=1;
+    lcd.print("VERDE");
+    return 4;
   }else if(blue>100){
-    lcd.print("BLUE");
-  }else 
+    colores[0]+=1;
+    lcd.print("AZUL");
+    return 2;
+  }
+  return -2;
 
-  Serial.print("R:\t"); Serial.print(int(red)); 
+  /*Serial.print("R:\t"); Serial.print(int(red)); 
   Serial.print("\tG:\t"); Serial.print(int(green)); 
-  Serial.print("\tB:\t"); Serial.print(int(blue));
+  Serial.print("\tB:\t"); Serial.print(int(blue));*/
 }
 //arreglo (y, x) 1 amarillo 2  azul 3 rojo 4 verde 5 negro
 int mazeColores[7][5] = {
@@ -120,7 +129,7 @@ void orientar(int o){
     return;
 }
 //moverme hacia coordenada
-void moveTo(int x1,int y1,int x2,int y2){
+void moveTo(int x1,int y1,int x2,int y2,int d){
     //CHECAR Q NO SEA NEGRO MIENTRAS ME MUEVO
     if(x1==x2){
         //mover en y
@@ -137,7 +146,7 @@ void moveTo(int x1,int y1,int x2,int y2){
             orientar(3);
         }
     }
-    //AVANZAR 30CM
+    //AVANZAR d
     xRobot=x2;
     yRobot=y2;
     return;
@@ -145,7 +154,7 @@ void moveTo(int x1,int y1,int x2,int y2){
 // recorrer path
 void goTo(int x1,int y1){ //parametros = posicion inicial
     for(int i=0;i<soli;i++){
-        moveTo(x1,y1,path[i][0],path[i][1]);
+        moveTo(x1,y1,path[i][0],path[i][1],30);
         x1=path[i][0];
         y1=path[i][1];
     }
@@ -156,7 +165,7 @@ void goTo(int x1,int y1){ //parametros = posicion inicial
 //recorrer path inverso
 void goBack(int x1,int y1){ //parametros = posicion inicial
     for(int i=soli-2;i>=0;i--){
-        moveTo(x1,y1,path[i][0],path[i][1]);
+        moveTo(x1,y1,path[i][0],path[i][1],30);
         x1=path[i][0];
         y1=path[i][1];
 
@@ -170,9 +179,15 @@ void goBack(int x1,int y1){ //parametros = posicion inicial
 void scanMaze(int x,int y){
     for(int i=0;i<4;i++){ //CHECAR MUROS
         if(mazeParedes[i][y][x]==0){
-            //1 si hay pared
-            //2 si no hay
-            mazeParedes[i][y][x]=2;
+            int s = analogRead(A0);
+            int dist= pow(10,log10(s/1821.2)/-0.65);
+            if(dist<20){
+                //1 si hay pared
+                mazeParedes[i][y][x]=1;
+            }else{
+                //2 si no hay
+                mazeParedes[i][y][x]=2;
+            }
         }
     }
   for(int i=0;i<4;i++){ //moverme a cada direccion
@@ -183,9 +198,13 @@ void scanMaze(int x,int y){
             goTo(xRobot,yRobot);
             soli=0;
         }
-        moveTo(xRobot,yRobot,x2,y2);
-        //CHECAR Y GUARDAR COLOR
-        mazeColores[y][x]=2;
+        moveTo(xRobot,yRobot,x2,y2,15);
+        mazeColores[y][x]=leerColor();
+        if(mazeColores[y][x]==5){
+            moveTo(xRobot,yRobot,x2,y2,-15);
+        }else{
+            moveTo(xRobot,yRobot,x2,y2,15);
+        }
       scanMaze(x2,y2);
         path[soli][0]=x;
         path[soli][1]=y;
