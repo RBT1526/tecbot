@@ -2,10 +2,44 @@
 #include <LiquidCrystal_I2C.h>
 #include "Adafruit_TCS34725.h"
 
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+//cosas del sensor de color
+#define commonAnode true
+byte gammatable[256];
+#define redpin 3
+#define greenpin 5
+#define bluepin 6
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+
 int path[20][2];
 int soli=0;
 int colores[3]={0,0,0}; // 0 azul 1 rojo 2 verde
 int targetColor=2;
+
+void leerColor(){
+  //rutina para leer color
+  int IR = analogRead(A3);
+  float red, green, blue;  
+  tcs.setInterrupt(false);  // turn on LED
+  tcs.getRGB(&red, &green, &blue);
+  tcs.setInterrupt(true);  // turn off LED
+
+  lcd.clear();
+  lcd.setCursor(0,0);  
+  if(green>100 && IR>500){
+    lcd.print("NEGRO");
+  }else if(red>100){
+    lcd.print("RED");    
+  }else if(green>100){
+    lcd.print("GREEN");
+  }else if(blue>100){
+    lcd.print("BLUE");
+  }else 
+
+  Serial.print("R:\t"); Serial.print(int(red)); 
+  Serial.print("\tG:\t"); Serial.print(int(green)); 
+  Serial.print("\tB:\t"); Serial.print(int(blue));
+}
 //arreglo (y, x) 1 amarillo 2  azul 3 rojo 4 verde 5 negro
 int mazeColores[7][5] = {
     {-1, -1, -1, -1, -1},
@@ -67,24 +101,43 @@ int orientacion=1;
 //posicion del robot
 int xRobot=2;
 int yRobot=5;
+void orientar(int o){
+    if(orientacion==1 && o==4){
+        //girar izquierda
+        orientacion=4;
+    }else if(orientacion==4 && o==1){
+        //girar derecha
+        orientacion=1;
+    }else if(orientacion<o){
+        //girar derecha
+        orientacion++;
+        orientar(o);
+    }else{
+        //girar izquierda
+        orientacion--;
+        orientar(o);
+    }
+    return;
+}
 //moverme hacia coordenada
 void moveTo(int x1,int y1,int x2,int y2){
     //CHECAR Q NO SEA NEGRO MIENTRAS ME MUEVO
     if(x1==x2){
         //mover en y
         if(y1>y2){
-
+            orientar(1);
         }else{
-
+            orientar(3);
         }
     }else{
         //mover en x
         if(x1>x2){
-
+            orientar(4);
         }else{
-
+            orientar(3);
         }
     }
+    //AVANZAR 30CM
     xRobot=x2;
     yRobot=y2;
     return;
@@ -191,6 +244,38 @@ void findColor(int x,int y){ //encontrar el camino hacia el color
   return;
 }
 void setup(){
+    Serial.begin(115200);
+  tcs.begin();
+  lcd.init();
+  lcd.backlight();
+
+  #if defined(ARDUINO_ARCH_ESP32)
+  ledcAttachPin(redpin, 1);
+  ledcSetup(1, 12000, 8);
+  ledcAttachPin(greenpin, 2);
+  ledcSetup(2, 12000, 8);
+  ledcAttachPin(bluepin, 3);
+  ledcSetup(3, 12000, 8);
+#else
+  pinMode(redpin, OUTPUT);
+  pinMode(greenpin, OUTPUT);
+  pinMode(bluepin, OUTPUT);
+#endif
+
+for (int i=0; i<256; i++) {
+    float x = i;
+    x /= 255;
+    x = pow(x, 2.5);
+    x *= 255;
+
+    if (commonAnode) {
+      gammatable[i] = 255 - x;
+    } else {
+      gammatable[i] = x;
+    }
+    //Serial.println(gammatable[i]);
+  }
+
     scanMaze(2,5);
   soli=0;
   solveMaze(xRobot,yRobot);
