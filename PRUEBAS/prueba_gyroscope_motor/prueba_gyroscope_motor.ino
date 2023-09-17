@@ -9,14 +9,13 @@
 */
 #include "CurieIMU.h"
 //control pins for left and right motors
-const int leftSpeed = 9; //means pin 9 on the Arduino controls the speed of left motor
-const int rightSpeed = 5;
-const int left1 = 3; //left 1 and left 2 control the direction of rotation of left motor
-const int left2 = 2;
-const int right1 = 8;
-const int right2 = 4;
+const int leftSpeed = 3; //means pin 9 on the Arduino controls the speed of left motor
+const int rightSpeed = 6;
+const int left1 = 5; //left 1 and left 2 control the direction of rotation of left motor
+const int left2 = 4;
+const int right1 = 7;
+const int right2 = 8;
 
-const int MPU = 0x68; // MPU6050 I2C address
 float AccX, AccY, AccZ; //linear acceleration
 float GyroX, GyroY, GyroZ; //angular velocity
 float accAngleX, accAngleY, gyroAngleX, gyroAngleY, gyroAngleZ; //used in void loop()
@@ -25,8 +24,8 @@ float AccErrorX, AccErrorY, GyroErrorX, GyroErrorY, GyroErrorZ;
 float elapsedTime, currentTime, previousTime;
 int c = 0;
 
-const int maxSpeed = 255; //max PWM value written to motor speed pin. It is typically 255.
-const int minSpeed = 160; //min PWM value at which motor moves
+const int maxSpeed = 200; //max PWM value written to motor speed pin. It is typically 255.
+const int minSpeed = 100; //min PWM value at which motor moves
 float angle; //due to how I orientated my MPU6050 on my car, angle = roll
 float targetAngle = 0;
 int equilibriumSpeed = 248; //rough estimate of PWM at the speed pin of the stronger motor, while driving straight 
@@ -39,11 +38,6 @@ bool paused = false; //is the program paused
 
 void setup() {
   Serial.begin(9600);
-  Wire.begin();                      // Initialize comunication
-  Wire.beginTransmission(MPU);       // Start communication with MPU6050 // MPU=0x68
-  Wire.write(0x6B);                  // Talk to the register 6B
-  Wire.write(0x00);                  // Make reset - place a 0 into the 6B register
-  Wire.endTransmission(true);        //end the transmission
   // Call this function if you need to get the IMU error values for your module
   calculateError();
   delay(20);
