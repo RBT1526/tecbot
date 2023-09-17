@@ -1,6 +1,7 @@
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 #include "Adafruit_TCS34725.h"
+#include "CurieIMU.h"
 
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 //cosas del sensor de color
@@ -105,25 +106,25 @@ int mazeParedes[4][7][5]={{
 //direcciones (up, right, down, left)
 int dx[] = {0, 1, 0, -1};
 int dy[] = {-1, 0, 1, 0};
-//orientacion del robot (1, 2, 3, 4)
-int orientacion=1;
+//orientacion del robot (0, 90, 180, 270)
+int orientacion=0;
 //posicion del robot
 int xRobot=2;
 int yRobot=5;
 void orientar(int o){
-    if(orientacion==1 && o==4){
+    if(orientacion==0 && o==270){
         //girar izquierda
-        orientacion=4;
-    }else if(orientacion==4 && o==1){
+        orientacion=270;
+    }else if(orientacion==270 && o==0){
         //girar derecha
-        orientacion=1;
+        orientacion=0;
     }else if(orientacion<o){
         //girar derecha
-        orientacion++;
+        orientacion+=90;
         orientar(o);
     }else{
         //girar izquierda
-        orientacion--;
+        orientacion-=90;
         orientar(o);
     }
     return;
@@ -134,16 +135,16 @@ void moveTo(int x1,int y1,int x2,int y2,int d){
     if(x1==x2){
         //mover en y
         if(y1>y2){
-            orientar(1);
+            orientar(0);
         }else{
-            orientar(3);
+            orientar(180);
         }
     }else{
         //mover en x
         if(x1>x2){
-            orientar(4);
+            orientar(270);
         }else{
-            orientar(3);
+            orientar(90);
         }
     }
     //AVANZAR d
@@ -177,8 +178,9 @@ void goBack(int x1,int y1){ //parametros = posicion inicial
 
 //función recursiva para checar cada cuadro posible
 void scanMaze(int x,int y){
-    for(int i=0;i<4;i++){ //CHECAR MUROS
+    for(int i=0;i<4;i++){ //checa muros
         if(mazeParedes[i][y][x]==0){
+            //CHECAR CUAL SENSOR USAR
             int s = analogRead(A0);
             int dist= pow(10,log10(s/1821.2)/-0.65);
             if(dist<20){
@@ -198,9 +200,9 @@ void scanMaze(int x,int y){
             goTo(xRobot,yRobot);
             soli=0;
         }
-        moveTo(xRobot,yRobot,x2,y2,15);
+        moveTo(xRobot,yRobot,x2,y2,15); //moverme 15 y checar color
         mazeColores[y][x]=leerColor();
-        if(mazeColores[y][x]==5){
+        if(mazeColores[y][x]==5){ //moverme el resto o regresar
             moveTo(xRobot,yRobot,x2,y2,-15);
         }else{
             moveTo(xRobot,yRobot,x2,y2,15);
@@ -294,7 +296,7 @@ for (int i=0; i<256; i++) {
     }
     //Serial.println(gammatable[i]);
   }
-
+  //rutina zona a
     scanMaze(2,5);
   soli=0;
   solveMaze(xRobot,yRobot);

@@ -7,11 +7,16 @@ float accelScale, gyroScale;
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   // start the IMU and filter
 
   CurieIMU.begin();
+
+  CurieIMU.autoCalibrateGyroOffset();
+  CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
+  CurieIMU.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
+  CurieIMU.autoCalibrateAccelerometerOffset(Z_AXIS, 0);
 
   CurieIMU.setGyroRate(25);
 
@@ -89,12 +94,11 @@ void loop() {
     Serial.print(heading);
 
     Serial.print(" ");
+    
+    Serial.println(gx);
 
-    Serial.print(pitch);
 
-    Serial.print(" ");
-
-    Serial.println(roll);
+    
 
     // increment previous time, so we keep proper pace
 
@@ -132,3 +136,35 @@ float convertRawGyro(int gRaw) {
 
   return g;
 }
+
+/*void rotate (float targetAngle){//called by void loop(), which isDriving = false
+  int deltaAngle = round(targetAngle - angle);
+  int targetGyroX;
+  if (abs(deltaAngle) <= 1){
+    stopCar();
+  } else {
+    if (angle > targetAngle) { //turn left
+      left();
+    } else if (angle < targetAngle) {//turn right
+      right();
+    }
+
+    //setting up propoertional control, see Step 3 on the website
+    if (abs(deltaAngle) > 30){
+      targetGyroX = 60;
+    } else {
+      targetGyroX = 2 * abs(deltaAngle);
+    }
+    
+    if (round(targetGyroX - abs(GyroX)) == 0){
+      ;
+    } else if (targetGyroX > abs(GyroX)){
+      leftSpeedVal = changeSpeed(leftSpeedVal, +1); //would increase abs(GyroX)
+    } else {
+      leftSpeedVal = changeSpeed(leftSpeedVal, -1);
+    }
+    rightSpeedVal = leftSpeedVal;
+    analogWrite(rightSpeed, rightSpeedVal);
+    analogWrite(leftSpeed, leftSpeedVal);
+  }
+}*/
