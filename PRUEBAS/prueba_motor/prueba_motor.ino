@@ -1,9 +1,9 @@
 const int pwm_a = 6;
-const int der_a = 8;
-const int der_b = 7;
+const int der_a = 7;
+const int der_b = 8;
 const int pwm_b = 3;
-const int izq_a = 4;
-const int izq_b = 5;
+const int izq_a = 5;
+const int izq_b = 4;
 
 void setup (){
 pinMode(pwm_a, OUTPUT);
