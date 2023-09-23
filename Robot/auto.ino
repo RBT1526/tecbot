@@ -29,7 +29,6 @@ int leerColor(){
   lcd.setCursor(0,0);  
   if(green>100 && IR>500){
     lcd.print("NEGRO");
-    //dejar de avanzar
     return 5;
   }else if(red>100){
     colores[1]+=1;
@@ -206,11 +205,11 @@ void scanMaze(int x,int y){
             moveTo(xRobot,yRobot,x2,y2,-15);
         }else{
             moveTo(xRobot,yRobot,x2,y2,15);
+            scanMaze(x2,y2);
+            path[soli][0]=x;
+            path[soli][1]=y;
+            soli++;
         }
-      scanMaze(x2,y2);
-        path[soli][0]=x;
-        path[soli][1]=y;
-        soli++;
     }
   }
   return;
