@@ -154,8 +154,8 @@ void turn(float targetAngle){
             targetAngle=360+targetAngle;
         }
 
-        Serial.println(heading);
-        Serial.println(" ");
+        Serial.print(heading);
+        Serial.print(" ");
         Serial.println(targetAngle);
 
         if(heading<targetAngle){
@@ -398,6 +398,54 @@ void downRamp(){
     orientar(180);
     return;
 }
+int cubosColocados=0;
+bool tengoCubo=false;
+int coloresB(){
+    //rutina para leer color
+  int IR = analogRead(A3);
+  float red, green, blue;  
+  tcs.setInterrupt(false);  // turn on LED
+  tcs.getRGB(&red, &green, &blue);
+  tcs.setInterrupt(true);  // turn off LED
+
+  if(red>100){
+    return 1;    
+  }else if(green>100){
+    return 2;
+  }
+  return 3;
+}
+void solveB(int x,int y){
+    //1 rojo
+    //2 verde
+    //3 vacio
+    for(int i=0;i<4;i++){ //moverme a cada direccion
+    int x2=x+dx[i];
+    int y2=y+dy[i];
+    if(mazeColores[y2][x2]!=-1 && mazeVisitados[y2][x2]==0 && cubosColocados<3){
+        mazeVisitados[y2][x2]=1;
+        moveTo(xRobot,yRobot,x2,y2,15); //moverme 15 y checar color
+        mazeColores[y2][x2]=coloresB();
+        if(mazeColores[y2][x2]==1 && tengoCubo==false){
+            //lo agarro
+            tengoCubo=true;
+            moveTo(xRobot,yRobot,x2,y2,15);
+            fin=false;
+            findGreen();
+            goTo();
+        }else if(mazeColores[y2][x2]==2 && tengoCubo==true){
+            mazeVisitados[y2][x2]=1;
+            //lo dejo
+            moveTo(xRobot,yRobot,x2,y2,15);
+        }else if(mazeColores[y2][x2]==3){
+            moveTo(xRobot,yRobot,x2,y2,15);
+            solveB(x2,y2);
+            moveTo(xRobot,yRobot,x,y,-30);
+        }
+    }
+  }
+    return;
+}
 void setup(){
     Serial.begin(115200);
 //cosas del IMU
@@ -468,4 +516,21 @@ for (int i=0; i<256; i++) {
   //rutina rampa
   downRamp();
   //rutina zona b
+  for(int i=1;i<6;i++){
+    for(int j=1;j<4;j++){
+        mazeColores[i][j]=0;
+        mazeVisitados[i][j]=0;
+    }
+  }
+  mazeColores[6][3]=-1;
+  xRobot=2;
+  yRobot=0;
+  do{
+    for(int i=1;i<6;i++){
+        for(int j=1;j<4;j++){
+            mazeVisitados[i][j]=0;
+        }
+    }
+    solveB(xRobot,yRobot);
+  }while(cubosColocados<3)
 }
