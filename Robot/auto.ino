@@ -121,11 +121,32 @@ void orientar(int o){
         //girar derecha
         orientacion+=90;
         orientar(o);
-    }else{
+    }else if(orientacion>o){
         //girar izquierda
         orientacion-=90;
         orientar(o);
     }
+    return;
+}
+void center(int a,int b){
+    int oInicial=orientacion;
+    orientar(a);
+    //roll forward
+    do{
+    //int front = analogRead(A3);
+    //int distFront= pow(10,log10(front/1821.2)/-0.65);
+    }while(distFront>4.3);
+    //stop
+    if(b!=-1){
+        orientar(b);
+        //roll forward
+        do{
+        //int front = analogRead(A3);
+        //int distFront= pow(10,log10(front/1821.2)/-0.65);
+        }while(distFront>4.3);
+        //stop
+    }
+    orientar(oInicial);
     return;
 }
 //moverme hacia coordenada
@@ -263,6 +284,28 @@ void findColor(int x,int y){ //encontrar el camino hacia el color
   }
   return;
 }
+void downRamp(){
+    center(0,90);
+    orientar(270);
+    //roll forward
+    do{
+        //int der = analogRead(A0);
+        //int izq = analogRead(A1);
+        //front = analogRead(A3);
+        //int distDer= pow(10,log10(der/1821.2)/-0.65);
+        //int distIzq= pow(10,log10(izq/1821.2)/-0.65);
+        //distFront= pow(10,log10(front/1821.2)/-0.65);
+        if(distDer<=4){
+            //subir velocidad motor der
+        }else if(distIzq<=4){
+            //subir velocidad motor izq
+        }
+    }while(distFront>4.3);
+    //stop
+    center(0,270);
+    orientar(180);
+    return;
+}
 void setup(){
     Serial.begin(115200);
   tcs.begin();
@@ -296,7 +339,7 @@ for (int i=0; i<256; i++) {
     //Serial.println(gammatable[i]);
   }
   //rutina zona a
-    scanMaze(2,5);
+  scanMaze(2,5);
   soli=0;
   solveMaze(xRobot,yRobot);
   goTo(xRobot,yRobot);
@@ -316,4 +359,7 @@ for (int i=0; i<256; i++) {
   goTo(3,0);
   goBack(xRobot,yRobot);
   soli=0;
+  //rutina rampa
+  downRamp();
+  //rutina zona b
 }
