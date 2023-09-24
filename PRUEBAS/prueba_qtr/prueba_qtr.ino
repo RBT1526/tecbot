@@ -2,23 +2,27 @@
 
 QTRSensors qtr;
 
-const int pwm_a = 6;
+const int pwm_a = 9;
 const int der_a = 7;
 const int der_b = 8;
 const int pwm_b = 3;
 const int izq_a = 5;
 const int izq_b = 4;
-
+const int standBy = 6;
 float velDer=150,velIzq=150;
 
 void setup()
 {
+    pinMode(standBy, OUTPUT);
     pinMode(pwm_a, OUTPUT);
     pinMode(der_a, OUTPUT);
     pinMode(der_b, OUTPUT);
     pinMode(pwm_b, OUTPUT);
     pinMode(izq_a, OUTPUT);
     pinMode(izq_b, OUTPUT);
+
+digitalWrite(standBy, HIGH);
+
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2}, 3);
   for (uint8_t i = 0; i < 250; i++)
   {
