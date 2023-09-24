@@ -50,11 +50,11 @@ void turn(float targetAngle){
         if(heading<targetAngle){
             //giro izq
             analogWrite(pwm_a,150);//left
-            digitalWrite(der_a,LOW);
-            digitalWrite(der_b,HIGH);
+            digitalWrite(der_a,HIGH);
+            digitalWrite(der_b,LOW);
             analogWrite(pwm_b,150);
-            digitalWrite(izq_a,HIGH);
-            digitalWrite(izq_b,LOW);
+            digitalWrite(izq_a,LOW);
+            digitalWrite(izq_b,HIGH);           
             while(heading<targetAngle){
                 microsNow = micros();
                 if (microsNow - microsPrevious >= microsPerReading) {
@@ -81,11 +81,11 @@ void turn(float targetAngle){
         }else if(heading>targetAngle){
             //giro der
             analogWrite(pwm_a,150);//right
-            digitalWrite(der_a,HIGH);
-            digitalWrite(der_b,LOW);
+            digitalWrite(der_a,LOW);
+            digitalWrite(der_b,HIGH);
             analogWrite(pwm_b,150);
-            digitalWrite(izq_a,LOW);
-            digitalWrite(izq_b,HIGH);
+            digitalWrite(izq_a,HIGH);
+            digitalWrite(izq_b,LOW);
             while(heading>targetAngle){
                 microsNow = micros();
                 if (microsNow - microsPrevious >= microsPerReading) {
@@ -155,30 +155,9 @@ void setup() {
 }
 
 void loop() {
-    int aix, aiy, aiz;
-    int gix, giy, giz;
-    float ax, ay, az;
-    float gx, gy, gz;
-    float heading;
-
-    unsigned long microsNow;
-    /*delay(8000);
+    delay(8000);
     turn(90);
-    Serial.println("regreso");*/
-    microsNow = micros();
-    if (microsNow - microsPrevious >= microsPerReading) {
-        CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
-        ax = convertRawAcceleration(aix);
-        ay = convertRawAcceleration(aiy);
-        az = convertRawAcceleration(aiz);
-        gx = convertRawGyro(gix);
-        gy = convertRawGyro(giy);
-        gz = convertRawGyro(giz);
-        filter.updateIMU(gx, gy, gz, ax, ay, az);
-        heading = filter.getYaw();
-        Serial.println(heading);
-        microsPrevious = microsPrevious + microsPerReading;
-    }
+    Serial.println("regreso");
 }
 
 float convertRawAcceleration(int aRaw) {
