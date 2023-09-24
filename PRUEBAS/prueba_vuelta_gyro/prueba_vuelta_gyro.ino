@@ -155,9 +155,30 @@ void setup() {
 }
 
 void loop() {
-    delay(8000);
+    int aix, aiy, aiz;
+    int gix, giy, giz;
+    float ax, ay, az;
+    float gx, gy, gz;
+    float heading;
+
+    unsigned long microsNow;
+    /*delay(8000);
     turn(90);
-    Serial.println("regreso");
+    Serial.println("regreso");*/
+    microsNow = micros();
+    if (microsNow - microsPrevious >= microsPerReading) {
+        CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
+        ax = convertRawAcceleration(aix);
+        ay = convertRawAcceleration(aiy);
+        az = convertRawAcceleration(aiz);
+        gx = convertRawGyro(gix);
+        gy = convertRawGyro(giy);
+        gz = convertRawGyro(giz);
+        filter.updateIMU(gx, gy, gz, ax, ay, az);
+        heading = filter.getYaw();
+        Serial.println(heading);
+        microsPrevious = microsPrevious + microsPerReading;
+    }
 }
 
 float convertRawAcceleration(int aRaw) {
