@@ -81,7 +81,7 @@ Serial.begin(9600);
     pinMode(izq_b, OUTPUT);
 
 digitalWrite(standBy, HIGH);*/
-
+     qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, 8);
   for (uint8_t i = 0; i < 250; i++)
   {
@@ -95,6 +95,6 @@ void loop()
   int16_t position = qtr.readLineBlack(sensors);
 
   int16_t error = 2000 - position;
-    Serial.println(error);
+    Serial.println(position);
     //PID_Linefollow(error);
 }
