@@ -327,18 +327,19 @@ void orientar(int o){
 void center(int a,int b){
     int oInicial=orientacion;
     orientar(a);
+    int distFront;
     //roll forward
     do{
-    //int front = analogRead(A3);
-    //int distFront= pow(10,log10(front/1821.2)/-0.65);
+    int front = analogRead(A3);
+    distFront= pow(10,log10(front/1821.2)/-0.65);
     }while(distFront>4.3);
     //stop
     if(b!=-1){
         orientar(b);
         //roll forward
         do{
-        //int front = analogRead(A3);
-        //int distFront= pow(10,log10(front/1821.2)/-0.65);
+        int front = analogRead(A3);
+        distFront= pow(10,log10(front/1821.2)/-0.65);
         }while(distFront>4.3);
         //stop
     }
@@ -482,20 +483,21 @@ void findColor(int x,int y){ //encontrar el camino hacia el color
 void downRamp(){
     center(0,90);
     orientar(270);
+    int distFront;
     //roll forward
     do{
-        //int der = analogRead(A0);
-        //int izq = analogRead(A1);
-        //front = analogRead(A3);
-        //int distDer= pow(10,log10(der/1821.2)/-0.65);
-        //int distIzq= pow(10,log10(izq/1821.2)/-0.65);
-        //distFront= pow(10,log10(front/1821.2)/-0.65);
+        int der = analogRead(A0);
+        int izq = analogRead(A1);
+        int front = analogRead(A3);
+        int distDer= pow(10,log10(der/1821.2)/-0.65); //cambiar pines
+        int distIzq= pow(10,log10(izq/1821.2)/-0.65);
+        distFront= pow(10,log10(front/1821.2)/-0.65);
         if(distDer<=4){
             //subir velocidad motor der
         }else if(distIzq<=4){
             //subir velocidad motor izq
         }
-    }while(distFront>4.3);
+    }while(distFront>43);
     //stop
     center(0,270);
     orientar(180);
@@ -534,8 +536,8 @@ void solveB(int x,int y){
             tengoCubo=true;
             moveTo(xRobot,yRobot,x2,y2,15);
             fin=false;
-            findGreen();
-            goTo();
+            //findGreen();
+            //goTo(x2,y2);
         }else if(mazeColores[y2][x2]==2 && tengoCubo==true){
             mazeVisitados[y2][x2]=1;
             //lo dejo
@@ -635,5 +637,8 @@ for (int i=0; i<256; i++) {
         }
     }
     solveB(xRobot,yRobot);
-  }while(cubosColocados<3)
+  }while(cubosColocados<3);
+}
+void loop(){
+    
 }
