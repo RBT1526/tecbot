@@ -18,6 +18,9 @@ int vel_i = 90;
 int vel_pid_d = 0;
 int vel_pid_i = 0;
 
+bool flag = false;
+float errores = 0;
+float errores1 = 0;
 
 float target_angle;
 float error;
@@ -52,10 +55,42 @@ float get_motion(){
 void pid_check(float target){
     
     float angle_check = get_motion();
-
+    
     error = target - angle_check;
+    
+    if(error > 300){
+        error = target - (360+angle_check);
+        /*
+        flag = false;
+        errores = angle_check;
+        errores1 = target;
+        */
+    }
+    if(error < -300){
+        error = (angle_check-(360+target))*-1;
+        /*
+        flag = true;
 
-    //Serial.println(error);
+        errores = angle_check;
+        errores1 = target;
+        */
+    }
+    
+
+   // Serial.print("Target angle = ");
+    //Serial.print(target);
+    //Serial.print(" Actual angle = ");
+    //Serial.print(angle_check);
+    //Serial.print(" Error = ");
+   // Serial.println(error);
+   
+//Serial.print(" Errores = ");
+    //Serial.print(errores);
+    //Serial.print(" Errores1 = ");
+    //Serial.print(errores1);
+    //Serial.print(" flag = ");
+    //Serial.println(flag);
+    
     vel_pid_i = vel_i - Kp*error;
     vel_pid_d = vel_d + Kp*error; 
     if (vel_pid_i > 255) {
@@ -71,10 +106,11 @@ void pid_check(float target){
         vel_pid_d = 0;
     }
 
-    Serial.print("veld = ");
-    Serial.print(vel_pid_d);
-    Serial.print(" veli = ");
-    Serial.println(vel_pid_i);
+    //Serial.print("veld = ");
+    //Serial.print(vel_pid_d);
+    //Serial.print(" veli = ");
+    //Serial.println(vel_pid_i);
+    
 }
 
 void setup() {
@@ -125,7 +161,8 @@ void loop() {
     unsigned long microsNow;
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
-    pid_check(target_angle+90);
+    pid_check(target_angle);
+    //pid_check(358.0);
  
     }
 
