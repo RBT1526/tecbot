@@ -2,7 +2,9 @@
 
 QTRSensors qtr;
 
-const int pwm_a = 9;
+#define EMITTER_PIN 9
+
+/*const int pwm_a = 9;
 const int der_a = 7;
 const int der_b = 8;
 const int pwm_b = 3;
@@ -11,6 +13,7 @@ const int izq_b = 4;
 const int standBy = 6;
 float velDer=150,velIzq=150;
 float speed=150;
+
 
 float Kp = 0;//edit
 float Ki = 0;
@@ -63,11 +66,13 @@ void PID_Linefollow(int error){
       velDer = -255;
     }
     motor_drive();
-}
+}*/
 
 void setup()
 {
-    pinMode(standBy, OUTPUT);
+Serial.begin(9600);
+
+    /*pinMode(standBy, OUTPUT);
     pinMode(pwm_a, OUTPUT);
     pinMode(der_a, OUTPUT);
     pinMode(der_b, OUTPUT);
@@ -75,9 +80,9 @@ void setup()
     pinMode(izq_a, OUTPUT);
     pinMode(izq_b, OUTPUT);
 
-digitalWrite(standBy, HIGH);
+digitalWrite(standBy, HIGH);*/
 
-  qtr.setSensorPins((const uint8_t[]){A0, A1, A2}, 8);//cambiar pines
+  qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, 8);
   for (uint8_t i = 0; i < 250; i++)
   {
     qtr.calibrate();
@@ -86,9 +91,10 @@ digitalWrite(standBy, HIGH);
 }
 void loop()
 {
+    uint16_t sensors[8];
   int16_t position = qtr.readLineBlack(sensors);
 
-  int16_t error = position - 1000;
-
-    PID_Linefollow(error);
+  int16_t error = 2000 - position;
+    Serial.println(error);
+    //PID_Linefollow(error);
 }

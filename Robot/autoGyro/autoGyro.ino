@@ -534,7 +534,7 @@ void solveB(int x,int y){
             tengoCubo=true;
             moveTo(xRobot,yRobot,x2,y2,15);
             fin=false;
-            findGreen();
+            //findGreen();
             goTo();
         }else if(mazeColores[y2][x2]==2 && tengoCubo==true){
             mazeVisitados[y2][x2]=1;
@@ -635,5 +635,8 @@ for (int i=0; i<256; i++) {
         }
     }
     solveB(xRobot,yRobot);
-  }while(cubosColocados<3)
+  }while(cubosColocados<3);
+}
+void loop(){
+
 }
