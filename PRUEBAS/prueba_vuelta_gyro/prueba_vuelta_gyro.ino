@@ -5,14 +5,14 @@ Madgwick filter;
 unsigned long microsPerReading, microsPrevious;
 float accelScale, gyroScale;
 
-const int pwm_a = 9;
-const int der_a = 7;
-const int der_b = 8;
-const int pwm_b = 3;
-const int izq_a = 5;
-const int izq_b = 4;
+const int pwm_a = 3;
+const int der_a = 4;
+const int der_b = 5;
+const int pwm_b = 9;
+const int izq_a = 8;
+const int izq_b = 7;
 const int standBy = 6;
-float velDer=150,velIzq=150;
+float velDer=50,velIzq=50;
 
 void turn(float targetAngle){
     int aix, aiy, aiz;
@@ -49,12 +49,12 @@ void turn(float targetAngle){
 
         if(heading<targetAngle){
             //giro izq
-            analogWrite(pwm_a,150);//left
+            analogWrite(pwm_a,velDer);//left
             digitalWrite(der_a,HIGH);
             digitalWrite(der_b,LOW);
-            analogWrite(pwm_b,150);
+            analogWrite(pwm_b,velIzq);
             digitalWrite(izq_a,LOW);
-            digitalWrite(izq_b,HIGH);           
+            digitalWrite(izq_b,HIGH);          
             while(heading<targetAngle){
                 microsNow = micros();
                 if (microsNow - microsPrevious >= microsPerReading) {
@@ -80,10 +80,10 @@ void turn(float targetAngle){
             digitalWrite(izq_b,LOW);
         }else if(heading>targetAngle){
             //giro der
-            analogWrite(pwm_a,150);//right
+            analogWrite(pwm_a,velDer);//right
             digitalWrite(der_a,LOW);
             digitalWrite(der_b,HIGH);
-            analogWrite(pwm_b,150);
+            analogWrite(pwm_b,velIzq);
             digitalWrite(izq_a,HIGH);
             digitalWrite(izq_b,LOW);
             while(heading>targetAngle){
@@ -155,8 +155,8 @@ void setup() {
 }
 
 void loop() {
-    delay(8000);
-    turn(90);
+    delay(3000);
+    turn(-90);
     Serial.println("regreso");
 }
 
