@@ -10,6 +10,60 @@ const int izq_a = 5;
 const int izq_b = 4;
 const int standBy = 6;
 float velDer=150,velIzq=150;
+float speed=150;
+
+float Kp = 0;//edit
+float Ki = 0;
+float Kd = 0;
+uint8_t multiP = 1;//edit
+uint8_t multiI  = 1;
+uint8_t multiD = 1;
+uint8_t Kpfinal;
+uint8_t Kifinal;
+uint8_t Kdfinal;
+float Pvalue;
+float Ivalue;
+float Dvalue;
+int P, D, I, previousError, PIDvalue, error;
+
+void motor_drive(){
+    analogWrite(pwm_a,velDer);
+    digitalWrite(der_a,HIGH);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,velIzq);
+    digitalWrite(izq_a,LOW);
+    digitalWrite(izq_b,HIGH);
+}
+
+void PID_Linefollow(int error){
+    P = error;
+    I = I + error;
+    D = error - previousError;
+    
+    Pvalue = (Kp/pow(10,multiP))*P;
+    Ivalue = (Ki/pow(10,multiI))*I;
+    Dvalue = (Kd/pow(10,multiD))*D; 
+
+    float PIDvalue = Pvalue + Ivalue + Dvalue;
+    previousError = error;
+
+    velIzq = speed - PIDvalue;
+    velDer = speed + PIDvalue;
+
+    if (velIzq > 255) {
+      velIzq = 255;
+    }
+    if (velIzq < -255) {
+      velIzq = -255;
+    }
+    if (velDer > 255) {
+      velDer = 255;
+    }
+    if (velDer < -255) {
+      velDer = -255;
+    }
+    motor_drive();
+}
 
 void setup()
 {
@@ -23,7 +77,7 @@ void setup()
 
 digitalWrite(standBy, HIGH);
 
-  qtr.setSensorPins((const uint8_t[]){A0, A1, A2}, 3);
+  qtr.setSensorPins((const uint8_t[]){A0, A1, A2}, 8);//cambiar pines
   for (uint8_t i = 0; i < 250; i++)
   {
     qtr.calibrate();
@@ -36,28 +90,5 @@ void loop()
 
   int16_t error = position - 1000;
 
-    analogWrite(pwm_a,velDer);
-    digitalWrite(der_a,HIGH);
-    digitalWrite(der_b,LOW);
-    analogWrite(pwm_b,velIzq);
-    digitalWrite(izq_a,LOW);
-    digitalWrite(izq_b,HIGH);
-
-  if (error < -500)
-  {
-    // the line is on the left
-    velIzq-=0.01;
-  }else if (error > 500)
-  {
-    // the line is on the right
-    velDer-=0.01;
-  }else{
-    if(velIzq<150){
-        velIzq+=1;
-    }else if(velDer<150){
-        velDer+=1;
-    }
-  }
-
-  // set motor speeds using the two motor speed variables above
+    PID_Linefollow(error);
 }
