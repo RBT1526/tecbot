@@ -92,7 +92,7 @@ void setup() {
   CurieIMU.autoCalibrateGyroOffset();
   CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
   CurieIMU.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
-  CurieIMU.autoCalibrateAccelerometerOffset(Z_AXIS, 0);
+  CurieIMU.autoCalibrateAccelerometerOffset(Z_AXIS, 1);
   CurieIMU.setGyroRate(25);
 
   CurieIMU.setAccelerometerRate(25);
@@ -116,7 +116,7 @@ void setup() {
 
 void loop() {
     delay(8000);
-    turn(-90);
+    turn(90);
     Serial.println("regreso");
 }
 

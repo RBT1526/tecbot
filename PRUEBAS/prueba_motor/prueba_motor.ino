@@ -19,7 +19,7 @@ void loop(){
 analogWrite(pwm_a,150);
 digitalWrite(der_a,HIGH);
 digitalWrite(der_b,LOW);
-analogWrite(pwm_b,110);
+analogWrite(pwm_b,150);
 digitalWrite(izq_a,HIGH);
 digitalWrite(izq_b,LOW);
 delay(2000);
