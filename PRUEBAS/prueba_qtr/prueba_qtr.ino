@@ -1,6 +1,7 @@
 #include <QTRSensors.h>
 
 QTRSensors qtr;
+uint16_t sensors[8];
 
 #define EMITTER_PIN 9
 
@@ -83,6 +84,7 @@ Serial.begin(9600);
 digitalWrite(standBy, HIGH);*/
      qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, 8);
+  qtr.setEmitterPin(9);
   for (uint8_t i = 0; i < 250; i++)
   {
     qtr.calibrate();
@@ -91,10 +93,11 @@ digitalWrite(standBy, HIGH);*/
 }
 void loop()
 {
-    uint16_t sensors[8];
+    
   int16_t position = qtr.readLineBlack(sensors);
 
   int16_t error = 2000 - position;
-    Serial.println(position);
+    Serial.println(error);
+    delay(200);
     //PID_Linefollow(error);
 }
