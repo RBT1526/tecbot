@@ -124,6 +124,20 @@ const int izq_a = 8;
 const int izq_b = 7;
 const int standBy = 6;
 float velDer=45,velIzq=45;
+//PID LINE FOLLOWER
+float Kp = 0;//edit
+float Ki = 0;
+float Kd = 0;
+uint8_t multiP = 1;//edit
+uint8_t multiI  = 1;
+uint8_t multiD = 1;
+uint8_t Kpfinal;
+uint8_t Kifinal;
+uint8_t Kdfinal;
+float Pvalue;
+float Ivalue;
+float Dvalue;
+int P, D, I, previousError, PIDvalue, error;
 //cosas para calcular angulos
 float convertRawAcceleration(int aRaw) {
   float a = (aRaw * 2.0) / 32768.0;
@@ -132,6 +146,14 @@ float convertRawAcceleration(int aRaw) {
 float convertRawGyro(int gRaw) {
   float g = (gRaw * 250.0) / 32768.0;
   return g;
+}
+void motor_drive(){
+    analogWrite(pwm_a,velDer);
+    digitalWrite(der_a,HIGH);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,velIzq);
+    digitalWrite(izq_a,LOW);
+    digitalWrite(izq_b,HIGH);
 }
 //girar a angulo
 void turn(float targetAngle){
@@ -364,6 +386,7 @@ void moveTo(int x1,int y1,int x2,int y2,int d){
         }
     }
     //AVANZAR d
+    
     xRobot=x2;
     yRobot=y2;
     return;
@@ -535,7 +558,7 @@ void solveB(int x,int y){
             //lo agarro
             tengoCubo=true;
             moveTo(xRobot,yRobot,x2,y2,15);
-            fin=false;
+            //fin=false;
             //findGreen();
             //goTo(x2,y2);
         }else if(mazeColores[y2][x2]==2 && tengoCubo==true){
@@ -543,13 +566,42 @@ void solveB(int x,int y){
             //lo dejo
             moveTo(xRobot,yRobot,x2,y2,15);
         }else if(mazeColores[y2][x2]==3){
-            moveTo(xRobot,yRobot,x2,y2,15);
-            solveB(x2,y2);
-            moveTo(xRobot,yRobot,x,y,-30);
+            moveTo(xRobot,yRobot,x2,y2,15);            
         }
+        solveB(x2,y2);
+        moveTo(xRobot,yRobot,x,y,-30);
     }
   }
     return;
+}
+void PID_Linefollow(int error){
+    P = error;
+    I = I + error;
+    D = error - previousError;
+    
+    Pvalue = (Kp/pow(10,multiP))*P;
+    Ivalue = (Ki/pow(10,multiI))*I;
+    Dvalue = (Kd/pow(10,multiD))*D; 
+
+    float PIDvalue = Pvalue + Ivalue + Dvalue;
+    previousError = error;
+
+    velIzq = speed - PIDvalue;
+    velDer = speed + PIDvalue;
+
+    if (velIzq > 255) {
+      velIzq = 255;
+    }
+    if (velIzq < -255) {
+      velIzq = -255;
+    }
+    if (velDer > 255) {
+      velDer = 255;
+    }
+    if (velDer < -255) {
+      velDer = -255;
+    }
+    motor_drive();
 }
 void setup(){
     Serial.begin(115200);
@@ -640,5 +692,14 @@ for (int i=0; i<256; i++) {
   }while(cubosColocados<3);
 }
 void loop(){
-    
+    char errorStr[4];
+    Serial.readBytes(errorStr,4); //Read the serial data and store in var
+    int error=0;
+    int j=0;
+    for(int i=1000;i>0;i/10){
+        error+=i*int(errorStr[j]);
+        j++;
+    }
+    Serial.println(error);
+    PID_Linefollow(error);
 }

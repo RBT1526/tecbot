@@ -5,7 +5,7 @@ uint16_t sensors[8];
 
 #define EMITTER_PIN 9
 
-/*const int pwm_a = 9;
+const int pwm_a = 9;
 const int der_a = 7;
 const int der_b = 8;
 const int pwm_b = 3;
@@ -67,13 +67,13 @@ void PID_Linefollow(int error){
       velDer = -255;
     }
     motor_drive();
-}*/
+}
 
 void setup()
 {
 Serial.begin(9600);
 
-    /*pinMode(standBy, OUTPUT);
+    pinMode(standBy, OUTPUT);
     pinMode(pwm_a, OUTPUT);
     pinMode(der_a, OUTPUT);
     pinMode(der_b, OUTPUT);
@@ -81,7 +81,7 @@ Serial.begin(9600);
     pinMode(izq_a, OUTPUT);
     pinMode(izq_b, OUTPUT);
 
-digitalWrite(standBy, HIGH);*/
+digitalWrite(standBy, HIGH);
      qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, 8);
   qtr.setEmitterPin(9);
@@ -99,5 +99,5 @@ void loop()
   int16_t error = 2000 - position;
     Serial.println(error);
     delay(200);
-    //PID_Linefollow(error);
+    PID_Linefollow(error);
 }
