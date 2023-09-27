@@ -9,13 +9,13 @@ const int pwm_a = 3;
 const int der_a = 4;
 const int der_b = 5;
 const int pwm_b = 9;
-const int izq_a = 8;
-const int izq_b = 7;
+const int izq_a = 7;
+const int izq_b = 8;
 const int standBy = 6;
-float velDer=50,velIzq=50;
+float velDer=80,velIzq=70;
 
-int vel_d = 100;
-int vel_i = 90;
+int vel_d = 95;
+int vel_i = 100;
 int vel_pid_d = 0;
 int vel_pid_i = 0;
 
@@ -384,6 +384,7 @@ void loop() {
     unsigned long microsNow;
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
+    
     pid_check(target_angle);
     //pid_check(358.0);
     }
