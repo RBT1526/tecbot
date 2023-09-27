@@ -14,7 +14,7 @@ const int standBy = 6;
 float velDer=50,velIzq=50;
 
 int vel_d = 100;
-int vel_i = 90;
+int vel_i = 100;
 int vel_pid_d = 0;
 int vel_pid_i = 0;
 
@@ -23,7 +23,7 @@ float target_angle;
 float error;
 
 
-float Kp = 1.5;
+float Kp = 1;
 
 
 float get_motion(){
@@ -125,7 +125,7 @@ void loop() {
     unsigned long microsNow;
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
-    pid_check(target_angle+90);
+    pid_check(target_angle);
  
     }
 
