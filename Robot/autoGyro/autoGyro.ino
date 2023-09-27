@@ -352,17 +352,17 @@ void center(int a,int b){
     int distFront;
     //roll forward
     do{
-    int front = analogRead(A3);
+    int front = analogRead(A0);//CAMBIAR
     distFront= pow(10,log10(front/1821.2)/-0.65);
-    }while(distFront>4.3);
+    }while(distFront>43);
     //stop
     if(b!=-1){
         orientar(b);
         //roll forward
         do{
-        int front = analogRead(A3);
+        int front = analogRead(A0);//CAMBIAR
         distFront= pow(10,log10(front/1821.2)/-0.65);
-        }while(distFront>4.3);
+        }while(distFront>43);
         //stop
     }
     orientar(oInicial);
@@ -386,7 +386,18 @@ void moveTo(int x1,int y1,int x2,int y2,int d){
         }
     }
     //AVANZAR d
-    
+    int targetDist = analogRead(A0);//CAMBIAR
+    targetDist+=d;
+    motor_drive();
+    while(back<targetDist){
+        targetDist = analogRead(A0);//CAMBIAR
+    }
+    analogWrite(pwm_a,0);
+    digitalWrite(der_a,LOW);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,0);
+    digitalWrite(izq_a,LOW);
+    digitalWrite(izq_b,LOW);
     xRobot=x2;
     yRobot=y2;
     return;
