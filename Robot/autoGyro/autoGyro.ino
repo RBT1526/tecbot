@@ -387,10 +387,11 @@ void moveTo(int x1,int y1,int x2,int y2,int d){
     }
     //AVANZAR d
     int targetDist = analogRead(A0);//CAMBIAR
+    int back=targetDist;
     targetDist+=d;
     motor_drive();
     while(back<targetDist){
-        targetDist = analogRead(A0);//CAMBIAR
+        back = analogRead(A0);//CAMBIAR
     }
     analogWrite(pwm_a,0);
     digitalWrite(der_a,LOW);
@@ -596,7 +597,7 @@ void PID_Linefollow(int error){
 
     float PIDvalue = Pvalue + Ivalue + Dvalue;
     previousError = error;
-
+    int speed=50;
     velIzq = speed - PIDvalue;
     velDer = speed + PIDvalue;
 
@@ -660,6 +661,7 @@ for (int i=0; i<256; i++) {
     }
     //Serial.println(gammatable[i]);
   }
+}
   
 void loop(){
     //rutina zona a
@@ -703,7 +705,6 @@ void loop(){
     }
     solveB(xRobot,yRobot);
   }while(cubosColocados<3);
-}
     //zona c
     char errorStr[4];
     Serial.readBytes(errorStr,4); //Read the serial data and store in var
