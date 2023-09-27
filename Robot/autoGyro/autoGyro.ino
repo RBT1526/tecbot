@@ -649,7 +649,9 @@ for (int i=0; i<256; i++) {
     }
     //Serial.println(gammatable[i]);
   }
-  //rutina zona a
+  
+void loop(){
+    //rutina zona a
   scanMaze(2,5);
   soli=0;
   solveMaze(xRobot,yRobot);
@@ -691,7 +693,7 @@ for (int i=0; i<256; i++) {
     solveB(xRobot,yRobot);
   }while(cubosColocados<3);
 }
-void loop(){
+    //zona c
     char errorStr[4];
     Serial.readBytes(errorStr,4); //Read the serial data and store in var
     int error=0;
