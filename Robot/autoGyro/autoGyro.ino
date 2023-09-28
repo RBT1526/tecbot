@@ -126,7 +126,7 @@ const int izq_b = 8;
 const int standBy = 6;
 float velDer=45,velIzq=45;
 //PID LINE FOLLOWER
-float Kp = 0;//edit
+float Kp = 1;//edit
 float Ki = 0;
 float Kd = 0;
 uint8_t multiP = 1;//edit
@@ -534,6 +534,30 @@ void downRamp(){
     orientar(180);
     return;
 }
+void leaveB(int x,int y){ //encontrar el camino mas corto
+    if(fin==true){
+        return;
+    }
+    if(x==3 && y==5){ //checar si llegue al final
+        fin=true;
+        return;
+    }
+    mazeVisitados[y][x]=1;
+  for(int i=0;i<4 && fin==false;i++){ //interntar moverme a todos los lados
+    int x2=x+dx[i];
+    int y2=y+dy[i];
+    if(mazeVisitados[y2][x2]!=-1 && mazeColores[y2][x2]!=4 && mazeVisitados[y2][x2]==0){
+        path[soli][0]=x2;
+        path[soli][1]=y2;
+        soli++;
+      leaveB(x2,y2);
+      if(fin==false){
+        soli--;
+      }
+    }
+  }
+  return;
+}
 int cubosColocados=0;
 bool tengoCubo=false;
 int coloresB(){
@@ -555,15 +579,18 @@ void solveB(int x,int y){
     //1 rojo
     //2 verde
     //3 vacio
-    for(int i=0;i<4;i++){ //moverme a cada direccion
+    for(int i=0;i<4 && cubosColocados<3;i++){ //moverme a cada direccion
     int x2=x+dx[i];
     int y2=y+dy[i];
     if(mazeColores[y2][x2]!=-1 && mazeVisitados[y2][x2]==0 && cubosColocados<3){
         mazeVisitados[y2][x2]=1;
         moveTo(xRobot,yRobot,x2,y2,15); //moverme 15 y checar color
-        mazeColores[y2][x2]=coloresB();
+        if(mazeColores[y2][x2]==0){
+          mazeColores[y2][x2]=coloresB();
+        }
         if(mazeColores[y2][x2]==1 && tengoCubo==false){
             //lo agarro
+            mazeColores[y2][x2]=3;
             tengoCubo=true;
             moveTo(xRobot,yRobot,x2,y2,15);
             solveB(x2,y2);
@@ -573,6 +600,8 @@ void solveB(int x,int y){
             //goTo(x2,y2);
         }else if(mazeColores[y2][x2]==2 && tengoCubo==true){
             //lo dejo
+            cubosColocados+=1;
+            mazeColores[y2][x2]=4;//ya no voy a este cuadro
             moveTo(xRobot,yRobot,x2,y2,-15);
         }else if(mazeColores[y2][x2]==3){
             moveTo(xRobot,yRobot,x2,y2,15);            
@@ -711,8 +740,18 @@ void loop(){/*
         }
     }
     solveB(xRobot,yRobot);
-  }while(cubosColocados<3);*/
+  }while(cubosColocados<3);
+  for(int i=1;i<6;i++){
+    for(int j=1;j<4;j++){
+      mazeVisitados[i][j]=0;
+    }
+  }
+  fin=false;
+  soli=0;
+  leaveB(xRobot,yRobot);
+  goTo(xRobot,yRobot);*/
     //zona c
+  //moveTo(3,5,4,5,30);
     
-    //PID_Linefollow(error);
+    PID_Linefollow(error);
 }
