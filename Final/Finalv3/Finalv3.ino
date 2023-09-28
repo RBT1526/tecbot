@@ -4,7 +4,7 @@
 Madgwick filter;
 unsigned long microsPerReading, microsPrevious;
 unsigned long micros_inicio;
-
+unsigned long micros_prev;
 const int pwm_a = 3;
 const int der_a = 4;
 const int der_b = 5;
@@ -28,7 +28,9 @@ float error;
 float error_ant;
 
 
-float Kp = 3;
+float Kp = 2;
+float Kd = 0.5;
+float Ki = 0.3;
 
 
 
@@ -60,47 +62,6 @@ void pid_check(float target){
     
     float angle_check = get_motion();
     
-    error = target - angle_check;
-    
-    if(error > 300){
-        error = target - (360+angle_check);
-    }
-    if(error < -300){
-        error = (angle_check-(360+target))*-1;
-    }
-    
-    
-    vel_pid_i = vel_i - Kp*error;
-    vel_pid_d = vel_d + Kp*error; 
-    if (vel_pid_i > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_i < 0) {
-        vel_pid_i = 0;
-    }
-    if (vel_pid_d > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_d < 0) {
-        vel_pid_d = 0;
-    }
-
-    //Serial.print("veld = ");
-    //Serial.print(vel_pid_d);
-    //Serial.print(" veli = ");
-    //Serial.println(vel_pid_i);
-    
-}/*
-void pid_vuelta(float target){
-    unsigned long micro_check, microspre,microcomple;
-    micro_check = micros();
-    microspre = micro_check;
-    microcomple = micro_check;
-    while(true){
-    micro_check = micros();
-    if(micro_check-microcomple >= 100000){
-    float angle_check = get_motion();
-
     
     error = target - angle_check;
     
@@ -112,59 +73,40 @@ void pid_vuelta(float target){
     }
     
     
-    vel_pid_i = vel_i - Kp*error;
-    vel_pid_d = vel_d + Kp*error; 
-    if (vel_pid_i > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_i < 0) {
-        vel_pid_i = 0;
-    }
-    if (vel_pid_d > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_d < 0) {
-        vel_pid_d = 0;
-    }
-    Serial.print("Error = ");
-    Serial.print(error);
-    Serial.print(" Error past= ");
-    Serial.print(error_ant);
-    Serial.print("Angle = ");
-    Serial.println(angle_check);
-    if ((error_ant < 1 || error_ant >= 0) && error_ant  == error){
-        break;
-    }
-    if(micro_check - microspre >= 30000){
+    vel_pid_i = vel_i - (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant));//i+error
+    vel_pid_d = vel_d + (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant)); 
     error_ant = error;
-    microspre = micro_check;
+    if (vel_pid_i > 255) {
+        vel_pid_i = 255;
     }
-    microcomple += 100000;
+    if (vel_pid_i < 0) {
+        vel_pid_i = 0;
     }
+    if (vel_pid_d > 255) {
+        vel_pid_i = 255;
     }
-    //Serial.print("veld = ");
-    //Serial.print(vel_pid_d);
-    //Serial.print(" veli = ");
-    //Serial.println(vel_pid_i);
-}
-void vuelta(float angle){
-    target_angle += angle;
-    int vel_ant_d = vel_d;
-    int vel_ant_i = vel_i;
-    vel_d = 0;
-    vel_i = 0;
-    Serial.println("YA ando aca");
-    Serial.println(target_angle);
-    //delay(2500);
-    pid_vuelta(target_angle);
-   // delay(2500);
-    vel_d = vel_ant_d;
-    vel_i = vel_ant_i;
+    if (vel_pid_d < 0) {
+        vel_pid_d = 0;
+    }
+
     
-
 }
-*/
 
+float get_distance(){
+    int s = analogRead(A0);
+    float dist= pow(10,log10(s/1821.2)/-0.65);
+    return dist;
+}
+float get_distance_b(){
+    int s = analogRead(A1);
+    float dist= pow(10,log10(s/1821.2)/-0.65);
+    return dist;
+}
+float get_distance_c(){
+    int s = analogRead(A2);
+    float dist= pow(10,log10(s/1821.2)/-0.65);
+    return dist;
+}
 void turn(float targetAngle){
     int aix, aiy, aiz;
     int gix, giy, giz;
@@ -361,6 +303,7 @@ void setup() {
     float ax, ay, az;
     float gx, gy, gz;
   microsPrevious = micros();
+  micros_prev = micros();
   micros_inicio = micros();
   CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
         ax = convertRawAcceleration(aix);
@@ -374,7 +317,9 @@ void setup() {
 }
 
 void loop() {
-    
+    int distance_i = get_distance_b();
+    int distance_d = get_distance_c();
+
     analogWrite(pwm_a, vel_pid_d);
     digitalWrite(der_a,HIGH);
     digitalWrite(der_b,LOW);
@@ -387,6 +332,53 @@ void loop() {
     pid_check(target_angle);
     //pid_check(358.0);
     }
+    if (distance_i < 4 && microsNow - micros_prev >= 300000){
+        target_angle-=0.7;
+        micros_prev = micros();
+    }
+    if (distance_d < 4 && microsNow - micros_prev >= 300000){
+        target_angle+=0.7;
+        micros_prev = micros();
+    }
+    /*
+    int d=20;
+    int targetDist = analogRead(A3);//CAMBIAR
+    int back=targetDist;
+    targetDist+=d;
+    if(back<targetDist){
+        int back = analogRead(A3);//CAMBIAR
+        Serial.print(back+" "+targetDist);
+        analogWrite(pwm_a, vel_pid_d);
+        digitalWrite(der_a,HIGH);
+        digitalWrite(der_b,LOW);
+        analogWrite(pwm_b,vel_pid_i);
+        digitalWrite(izq_a,HIGH);
+        digitalWrite(izq_b,LOW);
+        unsigned long microsNow;
+        microsNow = micros();
+        if (microsNow - microsPrevious >= 100000) {
+        pid_check(target_angle);
+    }else{
+        analogWrite(pwm_a, 0);
+        digitalWrite(der_a,LOW);
+        digitalWrite(der_b,LOW);
+        analogWrite(pwm_b, 0);
+        digitalWrite(izq_a,LOW);
+        digitalWrite(izq_b,LOW);
+    }
+    */
+    if (get_distance() < 5){
+        analogWrite(pwm_a,0);
+            digitalWrite(der_a,LOW);
+            digitalWrite(der_b,LOW);
+            analogWrite(pwm_b,0);
+            digitalWrite(izq_a,LOW);
+            digitalWrite(izq_b,LOW);
+            delay(500);
+            turn(90);
+
+    }
+    
     /*
     if(microsNow - micros_inicio >= 2000000){
         analogWrite(pwm_a,0);

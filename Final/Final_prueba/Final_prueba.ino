@@ -4,7 +4,7 @@
 Madgwick filter;
 unsigned long microsPerReading, microsPrevious;
 unsigned long micros_inicio;
-
+unsigned long micros_prev;
 const int pwm_a = 3;
 const int der_a = 4;
 const int der_b = 5;
@@ -12,159 +12,27 @@ const int pwm_b = 9;
 const int izq_a = 7;
 const int izq_b = 8;
 const int standBy = 6;
-float velDer=80,velIzq=70;
+float velDer=80,velIzq=80;
 
-int vel_d = 95;
+int vel_d = 85;
 int vel_i = 100;
-int vel_pid_d = 0;
-int vel_pid_i = 0;
 
-bool flag = false;
-float errores = 0;
-float errores1 = 0;
-
-float target_angle;
-float error;
-float error_ant;
-
-
-float Kp = 3;
-
-
-
-
-float get_motion(){
-    int aix, aiy, aiz;
-    int gix, giy, giz;
-    float ax, ay, az;
-    float gx, gy, gz;
-    float heading;
-    unsigned long microsNow;
-    microsNow = micros();
-    if (microsNow - microsPrevious >= microsPerReading) {
-        CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
-        ax = convertRawAcceleration(aix);
-        ay = convertRawAcceleration(aiy);
-        az = convertRawAcceleration(aiz);
-        gx = convertRawGyro(gix);
-        gy = convertRawGyro(giy);
-        gz = convertRawGyro(giz);
-        filter.updateIMU(gx, gy, gz, ax, ay, az);
-        heading = filter.getYaw();
-        /*Serial.println(heading);*/
-        microsPrevious = microsPrevious + microsPerReading;
-        }
-    return heading;
+float get_distance(){
+    int s = analogRead(A0);
+    float dist= pow(10,log10(s/1821.2)/-0.65);
+    return dist;
 }
-void pid_check(float target){
-    
-    float angle_check = get_motion();
-    
-    error = target - angle_check;
-    
-    if(error > 300){
-        error = target - (360+angle_check);
-    }
-    if(error < -300){
-        error = (angle_check-(360+target))*-1;
-    }
-    
-    
-    vel_pid_i = vel_i - Kp*error;
-    vel_pid_d = vel_d + Kp*error; 
-    if (vel_pid_i > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_i < 0) {
-        vel_pid_i = 0;
-    }
-    if (vel_pid_d > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_d < 0) {
-        vel_pid_d = 0;
-    }
-
-    //Serial.print("veld = ");
-    //Serial.print(vel_pid_d);
-    //Serial.print(" veli = ");
-    //Serial.println(vel_pid_i);
-    
-}/*
-void pid_vuelta(float target){
-    unsigned long micro_check, microspre,microcomple;
-    micro_check = micros();
-    microspre = micro_check;
-    microcomple = micro_check;
-    while(true){
-    micro_check = micros();
-    if(micro_check-microcomple >= 100000){
-    float angle_check = get_motion();
-
-    
-    error = target - angle_check;
-    
-    if(error > 300){
-        error = target - (360+angle_check);
-    }
-    if(error < -300){
-        error = (angle_check-(360+target))*-1;
-    }
-    
-    
-    vel_pid_i = vel_i - Kp*error;
-    vel_pid_d = vel_d + Kp*error; 
-    if (vel_pid_i > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_i < 0) {
-        vel_pid_i = 0;
-    }
-    if (vel_pid_d > 255) {
-        vel_pid_i = 255;
-    }
-    if (vel_pid_d < 0) {
-        vel_pid_d = 0;
-    }
-    Serial.print("Error = ");
-    Serial.print(error);
-    Serial.print(" Error past= ");
-    Serial.print(error_ant);
-    Serial.print("Angle = ");
-    Serial.println(angle_check);
-    if ((error_ant < 1 || error_ant >= 0) && error_ant  == error){
-        break;
-    }
-    if(micro_check - microspre >= 30000){
-    error_ant = error;
-    microspre = micro_check;
-    }
-    microcomple += 100000;
-    }
-    }
-    //Serial.print("veld = ");
-    //Serial.print(vel_pid_d);
-    //Serial.print(" veli = ");
-    //Serial.println(vel_pid_i);
+float get_distance_b(){
+    int s = analogRead(A1);
+    float dist= pow(10,log10(s/1821.2)/-0.65);
+    return dist;
 }
-void vuelta(float angle){
-    target_angle += angle;
-    int vel_ant_d = vel_d;
-    int vel_ant_i = vel_i;
-    vel_d = 0;
-    vel_i = 0;
-    Serial.println("YA ando aca");
-    Serial.println(target_angle);
-    //delay(2500);
-    pid_vuelta(target_angle);
-   // delay(2500);
-    vel_d = vel_ant_d;
-    vel_i = vel_ant_i;
-    
-
+float get_distance_c(){
+    int s = analogRead(A2);
+    float dist= pow(10,log10(s/1821.2)/-0.65);
+    return dist;
 }
-*/
-
+/*
 void turn(float targetAngle){
     int aix, aiy, aiz;
     int gix, giy, giz;
@@ -334,7 +202,7 @@ void turn(float targetAngle){
             delay(2000);
         }
 }
-
+*/
 void setup() {
     pinMode(standBy, OUTPUT);
     pinMode(pwm_a, OUTPUT);
@@ -345,71 +213,43 @@ void setup() {
     pinMode(izq_b, OUTPUT);
     digitalWrite(standBy, HIGH);
     Serial.begin(115200);
-  CurieIMU.begin();
-  CurieIMU.autoCalibrateGyroOffset();
-  CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
-  CurieIMU.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
-  CurieIMU.autoCalibrateAccelerometerOffset(Z_AXIS, 1);
-  CurieIMU.setGyroRate(25);
-  CurieIMU.setAccelerometerRate(25);
-  filter.begin(25);
-  CurieIMU.setAccelerometerRange(2);
-  CurieIMU.setGyroRange(250);
-  microsPerReading = 1000000 / 28;
-    int aix, aiy, aiz;
-    int gix, giy, giz;
-    float ax, ay, az;
-    float gx, gy, gz;
-  microsPrevious = micros();
-  micros_inicio = micros();
-  CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
-        ax = convertRawAcceleration(aix);
-        ay = convertRawAcceleration(aiy);
-        az = convertRawAcceleration(aiz);
-        gx = convertRawGyro(gix);
-        gy = convertRawGyro(giy);
-        gz = convertRawGyro(giz);
-        filter.updateIMU(gx, gy, gz, ax, ay, az);
-        target_angle = filter.getYaw();
 }
 
 void loop() {
-    
-    analogWrite(pwm_a, vel_pid_d);
+    float distance_i = get_distance_b();
+    float distance_d = get_distance_c();
+    float distance_f = get_distance();
+    analogWrite(pwm_a, vel_d);
     digitalWrite(der_a,HIGH);
     digitalWrite(der_b,LOW);
-    analogWrite(pwm_b,vel_pid_i);
+    analogWrite(pwm_b,vel_i);
     digitalWrite(izq_a,HIGH);
     digitalWrite(izq_b,LOW);
-    unsigned long microsNow;
-    microsNow = micros();
-    if (microsNow - microsPrevious >= 100000) {
-    pid_check(target_angle);
-    //pid_check(358.0);
+    if(distance_d <= 4.0){
+    analogWrite(pwm_a, vel_d+20);
+    digitalWrite(der_a,HIGH);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,vel_i);
+    digitalWrite(izq_a,HIGH);
+    digitalWrite(izq_b,LOW);
+    delay(300);
     }
-    /*
-    if(microsNow - micros_inicio >= 2000000){
-        analogWrite(pwm_a,0);
-            digitalWrite(der_a,LOW);
-            digitalWrite(der_b,LOW);
-            analogWrite(pwm_b,0);
-            digitalWrite(izq_a,LOW);
-            digitalWrite(izq_b,LOW);
-            delay(2000);
-        turn(90);
-        micros_inicio = micros();
+    if(distance_i <= 4.0){
+    analogWrite(pwm_a, vel_d);
+    digitalWrite(der_a,HIGH);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,vel_i+20);
+    digitalWrite(izq_a,HIGH);
+    digitalWrite(izq_b,LOW);
+    delay(300);
     }
-    */
+    if(distance_f <= 5.0){
+    analogWrite(pwm_a, 0);
+    digitalWrite(der_a,LOW);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,0);
+    digitalWrite(izq_a,LOW);
+    digitalWrite(izq_b,LOW);
+    }
 
-
-}
-
-float convertRawAcceleration(int aRaw) {
-  float a = (aRaw * 2.0) / 32768.0;
-  return a;
-}
-
-float convertRawGyro(int gRaw) {
-  float g = (gRaw * 250.0) / 32768.0;
-  return g;
 }

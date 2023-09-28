@@ -54,4 +54,5 @@ digitalWrite(der_a,LOW);
 digitalWrite(der_b,HIGH);
 delay(2000);
 */
+delay(1000);
 }

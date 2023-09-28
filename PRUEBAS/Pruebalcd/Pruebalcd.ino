@@ -30,10 +30,10 @@ void leerColor(){
   }else if(blue>100){
     lcd.print("BLUE");
   }else 
-
-  Serial.print("R:\t"); Serial.print(int(red)); 
+  Serial.println("R: "+int(red)+" G: "int(green)+" B: "+int(blue));
+  /*Serial.print("R:\t"); Serial.print(int(red)); 
   Serial.print("\tG:\t"); Serial.print(int(green)); 
-  Serial.print("\tB:\t"); Serial.print(int(blue));
+  Serial.print("\tB:\t"); Serial.print(int(blue));*/
 }
 
 void setup()

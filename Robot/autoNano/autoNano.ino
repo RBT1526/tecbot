@@ -23,7 +23,7 @@ void loop()
   int16_t position = qtr.readLineBlack(sensors);
 
   int16_t error = 2000 - position;
-  String str = String(error);
+  String str = String(position);
 
     char c[4]={'0','0','0','0'};
     int j=0;
@@ -35,5 +35,6 @@ void loop()
             b=true;
         }
     }
-    Serial.write(c,4);//j+1
+    Serial.println(c);
+    //Serial.write(c,4);//j+1
 }

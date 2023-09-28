@@ -24,7 +24,7 @@ int targetColor=2;
 
 int leerColor(){
   //rutina para leer color
-  int IR = analogRead(A3);
+  int IR = analogRead(A3);//USAR QTR
   float red, green, blue;  
   tcs.setInterrupt(false);  // turn on LED
   tcs.getRGB(&red, &green, &blue);
@@ -120,8 +120,8 @@ const int pwm_a = 3;
 const int der_a = 4;
 const int der_b = 5;
 const int pwm_b = 9;
-const int izq_a = 8;
-const int izq_b = 7;
+const int izq_a = 7;
+const int izq_b = 8;
 const int standBy = 6;
 float velDer=45,velIzq=45;
 //PID LINE FOLLOWER
@@ -147,11 +147,11 @@ float convertRawGyro(int gRaw) {
   float g = (gRaw * 250.0) / 32768.0;
   return g;
 }
-void motor_drive(){
-    analogWrite(pwm_a,velDer);
+void motor_drive(int v1,int v2){
+    analogWrite(pwm_a,v1);
     digitalWrite(der_a,HIGH);
     digitalWrite(der_b,LOW);
-    analogWrite(pwm_b,velIzq);
+    analogWrite(pwm_b,v2);
     digitalWrite(izq_a,LOW);
     digitalWrite(izq_b,HIGH);
 }
@@ -352,7 +352,7 @@ void center(int a,int b){
     int distFront;
     //roll forward
     do{
-    int front = analogRead(A0);//CAMBIAR
+    int front = analogRead(A0);
     distFront= pow(10,log10(front/1821.2)/-0.65);
     }while(distFront>43);
     //stop
@@ -360,7 +360,7 @@ void center(int a,int b){
         orientar(b);
         //roll forward
         do{
-        int front = analogRead(A0);//CAMBIAR
+        int front = analogRead(A0);
         distFront= pow(10,log10(front/1821.2)/-0.65);
         }while(distFront>43);
         //stop
@@ -387,18 +387,12 @@ void moveTo(int x1,int y1,int x2,int y2,int d){
     }
     //AVANZAR d
     int targetDist = analogRead(A0);//CAMBIAR
-    int back=targetDist;
     targetDist+=d;
-    motor_drive();
+    motor_drive(velDer,velIzq);
     while(back<targetDist){
-        back = analogRead(A0);//CAMBIAR
+        targetDist = analogRead(A0);//CAMBIAR
     }
-    analogWrite(pwm_a,0);
-    digitalWrite(der_a,LOW);
-    digitalWrite(der_b,LOW);
-    analogWrite(pwm_b,0);
-    digitalWrite(izq_a,LOW);
-    digitalWrite(izq_b,LOW);
+    motor_drive(0,0);
     xRobot=x2;
     yRobot=y2;
     return;
@@ -542,7 +536,7 @@ int cubosColocados=0;
 bool tengoCubo=false;
 int coloresB(){
     //rutina para leer color
-  int IR = analogRead(A3);
+  int IR = analogRead(A3);//USAR QTR
   float red, green, blue;  
   tcs.setInterrupt(false);  // turn on LED
   tcs.getRGB(&red, &green, &blue);
@@ -613,7 +607,17 @@ void PID_Linefollow(int error){
     if (velDer < -255) {
       velDer = -255;
     }
-    motor_drive();
+    motor_drive(velDer,velIzq);
+}
+int zonaColor(){
+    //rutina para leer color
+  int IR = analogRead(A3);//USAR QTR
+  float red, green, blue;  
+  tcs.setInterrupt(false);  // turn on LED
+  tcs.getRGB(&red, &green, &blue);
+  tcs.setInterrupt(true);  // turn off LED
+    //checar el color (amarillo 1, azul claro 2, rosa 3, violeta 4)
+  return 1;
 }
 void setup(){
     Serial.begin(115200);
@@ -705,6 +709,7 @@ void loop(){
     }
     solveB(xRobot,yRobot);
   }while(cubosColocados<3);
+}
     //zona c
     char errorStr[4];
     Serial.readBytes(errorStr,4); //Read the serial data and store in var
