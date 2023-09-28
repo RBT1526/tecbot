@@ -730,7 +730,7 @@ void loop(){/*
       mySerial.loop(millis()); 
       error = mySerial.readInt();
     }
-    Serial.print(error);
+    Serial.println(error);
     //PID_Linefollow(error);
 }
 void sendMyData(){

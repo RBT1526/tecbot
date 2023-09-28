@@ -22,7 +22,7 @@ void setup() {
 }
 
 void loop() {
-  if(valueInt<=0){
+  /*if(valueInt<=0){
     Serial.print("aun no ");
     mySerial.loop(millis()); 
     //recieveMyData('K');
@@ -30,7 +30,9 @@ void loop() {
   }else{
     Serial.print("fin ");
     Serial.println(valueInt);
-  }
+  }*/
+  valueInt = mySerial.readInt();
+  Serial.println(valueInt);
 }
 
 void sendMyData(){

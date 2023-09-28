@@ -36,11 +36,11 @@ void loop()
     mySerial.loop(millis()); 
     int16_t position = qtr.readLineBlack(sensors);
     int16_t error = 1000 - position;
-    mySerial.sendInt('k', error);
+    sendMyData();
 }
 
 void sendMyData(){
-
+  mySerial.sendInt('k', 10);
 }
 
 void recieveMyData(int sendCode){  

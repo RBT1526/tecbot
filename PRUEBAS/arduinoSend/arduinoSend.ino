@@ -23,13 +23,14 @@ void setup() {
 
 void loop() {
   mySerial.loop(millis()); 
-  sendMyData();
+  mySerial.sendInt('K', 10);
+  //sendMyData();
 }
 
 void sendMyData(){
   //Time to send data    
-  mySerial.sendFloat('A', 20.6);
-  /*mySerial.sendFloat('B', 10.8);
+  /*mySerial.sendFloat('A', 20.6);
+  mySerial.sendFloat('B', 10.8);
   mySerial.sendFloat('C', 123.9);
   mySerial.sendFloat('D', 325.0);
   mySerial.sendFloat('E', 129.2);
@@ -38,9 +39,9 @@ void sendMyData(){
   mySerial.sendFloat('H', 23.1);
   mySerial.sendFloat('I', 1.1);
   mySerial.sendFloat('J', 21.7);
-
+*/
   mySerial.sendInt('K', 10);
-  mySerial.sendInt('L', 20);
+  /*mySerial.sendInt('L', 20);
   mySerial.sendInt('M', 30);
   mySerial.sendInt('N', 40);
   mySerial.sendInt('O', 50);
