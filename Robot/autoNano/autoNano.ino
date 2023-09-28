@@ -34,7 +34,15 @@ qtr.setTypeAnalog();
 void loop()
 {
     mySerial.loop(millis()); 
-  int16_t position = qtr.readLineBlack(sensors);
-  //int16_t error = 2000 - position;
-  mySerial.sendInt('p', position);
+    int16_t position = qtr.readLineBlack(sensors);
+    int16_t error = 1000 - position;
+    mySerial.sendInt('k', error);
+}
+
+void sendMyData(){
+
+}
+
+void recieveMyData(int sendCode){  
+  
 }

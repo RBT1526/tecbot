@@ -567,18 +567,19 @@ void solveB(int x,int y){
             //lo agarro
             tengoCubo=true;
             moveTo(xRobot,yRobot,x2,y2,15);
+            solveB(x2,y2);
+            moveTo(xRobot,yRobot,x,y,-30);
             //fin=false;
             //findGreen();
             //goTo(x2,y2);
         }else if(mazeColores[y2][x2]==2 && tengoCubo==true){
-            mazeVisitados[y2][x2]=1;
             //lo dejo
-            moveTo(xRobot,yRobot,x2,y2,15);
+            moveTo(xRobot,yRobot,x2,y2,-15);
         }else if(mazeColores[y2][x2]==3){
             moveTo(xRobot,yRobot,x2,y2,15);            
+            solveB(x2,y2);
+            moveTo(xRobot,yRobot,x,y,-30);
         }
-        solveB(x2,y2);
-        moveTo(xRobot,yRobot,x,y,-30);
     }
   }
     return;
@@ -623,7 +624,7 @@ int zonaColor(){
   return 1;
 }
 void setup(){
-    Serial.begin(115200);
+    Serial.begin(9600);//115200
     // comunicacion serial
   mySerial.setBaudrate(9600);
   mySerial.changeWaitTime(20);
@@ -680,7 +681,7 @@ for (int i=0; i<256; i++) {
   }
 }
   
-void loop(){
+void loop(){/*
     //rutina zona a
   scanMaze(2,5);
   soli=0;
@@ -721,13 +722,20 @@ void loop(){
         }
     }
     solveB(xRobot,yRobot);
-  }while(cubosColocados<3);
+  }while(cubosColocados<3);*/
     //zona c
-    error=NAN;
-    while(isnan(error)){
+    error=-1;
+    while(error<=0){
       mySerial.loop(millis()); 
       error = mySerial.readInt();
     }
-    Serial.println(error);
-    PID_Linefollow(error);
+    Serial.print(error);
+    //PID_Linefollow(error);
+}
+void sendMyData(){
+  
+}
+
+void recieveMyData(int sendCode){  
+
 }
