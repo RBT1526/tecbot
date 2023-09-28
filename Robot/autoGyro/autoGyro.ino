@@ -390,7 +390,7 @@ void moveTo(int x1,int y1,int x2,int y2,int d){
     }
     //AVANZAR d
     int targetDist = analogRead(A0);//CAMBIAR
-    back=targetDist;
+    int back=targetDist;
     targetDist+=d;
     motor_drive(velDer,velIzq);
     while(back<targetDist){
