@@ -3,7 +3,7 @@
 SerialUtil mySerial;
 
 bool valueBool;
-int valueInt=NAN;
+int valueInt=-5;
 float valueFloat=NAN;
 String valueStr;
 
@@ -31,6 +31,7 @@ void loop() {
     Serial.print("fin ");
     Serial.println(valueInt);
   }*/
+  mySerial.loop(millis()); 
   valueInt = mySerial.readInt();
   Serial.println(valueInt);
 }

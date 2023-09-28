@@ -5,10 +5,6 @@ uint16_t sensors[8];
 
 #define EMITTER_PIN 9
 
-//serial communication
-#include "SerialUtil.h"
-SerialUtil mySerial;
-
 void setup()
 {
 Serial.begin(9600);
@@ -20,29 +16,11 @@ qtr.setTypeAnalog();
     qtr.calibrate();
     delay(20);
   }
-  // comunicacion serial setup
-  mySerial.setBaudrate(9600);
-  mySerial.changeWaitTime(20);
-  mySerial.startMode(MODE_SEND);
-  mySerial.comType(true,true);
-  mySerial.attachSend(sendMyData);
-  mySerial.attachRecieve(recieveMyData);
-  mySerial.setTimeOut(2000);
-  mySerial.setTimeChangeCom(5000);
-  Serial.println("End setup");
 }
 void loop()
 {
     mySerial.loop(millis()); 
     int16_t position = qtr.readLineBlack(sensors);
     int16_t error = 1000 - position;
-    sendMyData();
-}
-
-void sendMyData(){
-  mySerial.sendInt('k', 10);
-}
-
-void recieveMyData(int sendCode){  
-  
+    
 }

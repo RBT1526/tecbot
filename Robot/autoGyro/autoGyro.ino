@@ -3,9 +3,7 @@
 #include "Adafruit_TCS34725.h"
 #include <CurieIMU.h>
 #include <MadgwickAHRS.h>
-//serial communication
-#include "SerialUtil.h"
-SerialUtil mySerial;
+
 //IMU
 Madgwick filter;
 unsigned long microsPerReading, microsPrevious;
@@ -626,16 +624,6 @@ int zonaColor(){
 }
 void setup(){
     Serial.begin(9600);//115200
-    // comunicacion serial
-  mySerial.setBaudrate(9600);
-  mySerial.changeWaitTime(20);
-  mySerial.startMode(MODE_RECIEVE);
-  mySerial.comType(true,true);
-  mySerial.attachSend(sendMyData);
-  mySerial.attachRecieve(recieveMyData);
-  mySerial.setTimeOut(2000);
-  mySerial.setTimeChangeCom(5000);
-  Serial.println("End setup");
 //cosas del IMU
     CurieIMU.begin();
   CurieIMU.autoCalibrateGyroOffset();
@@ -725,18 +713,6 @@ void loop(){/*
     solveB(xRobot,yRobot);
   }while(cubosColocados<3);*/
     //zona c
-    error=-1;
-    while(error<=0){
-      mySerial.loop(millis()); 
-      error = mySerial.readInt();
-    }
-    Serial.println(error);
+    
     //PID_Linefollow(error);
-}
-void sendMyData(){
-  
-}
-
-void recieveMyData(int sendCode){  
-
 }

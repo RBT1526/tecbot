@@ -23,8 +23,7 @@ void setup() {
 
 void loop() {
   mySerial.loop(millis()); 
-  mySerial.sendInt('K', 10);
-  //sendMyData();
+  mySerial.sendInt('K', 100);
 }
 
 void sendMyData(){
