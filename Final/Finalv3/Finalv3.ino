@@ -5,16 +5,16 @@ Madgwick filter;
 unsigned long microsPerReading, microsPrevious;
 unsigned long micros_inicio;
 unsigned long micros_prev;
-const int pwm_a = 3;
-const int der_a = 4;
-const int der_b = 5;
-const int pwm_b = 9;
-const int izq_a = 7;
-const int izq_b = 8;
+const int pwm_a = 9;
+const int der_a = 8;
+const int der_b = 7;
+const int pwm_b = 3;
+const int izq_a = 4;
+const int izq_b = 5;
 const int standBy = 6;
-float velDer=80,velIzq=70;
+float velDer=80,velIzq=80;
 
-int vel_d = 95;
+int vel_d = 100;
 int vel_i = 100;
 int vel_pid_d = 0;
 int vel_pid_i = 0;
@@ -29,8 +29,8 @@ float error_ant;
 
 
 float Kp = 2;
-float Kd = 0.5;
-float Ki = 0.3;
+float Kd = 0.07;
+float Ki = 1;
 
 
 
@@ -93,7 +93,7 @@ void pid_check(float target){
 }
 
 float get_distance(){
-    int s = analogRead(A0);
+    int s = analogRead(A2);
     float dist= pow(10,log10(s/1821.2)/-0.65);
     return dist;
 }
@@ -317,8 +317,6 @@ void setup() {
 }
 
 void loop() {
-    int distance_i = get_distance_b();
-    int distance_d = get_distance_c();
 
     analogWrite(pwm_a, vel_pid_d);
     digitalWrite(der_a,HIGH);
@@ -332,14 +330,7 @@ void loop() {
     pid_check(target_angle);
     //pid_check(358.0);
     }
-    if (distance_i < 4 && microsNow - micros_prev >= 300000){
-        target_angle-=0.7;
-        micros_prev = micros();
-    }
-    if (distance_d < 4 && microsNow - micros_prev >= 300000){
-        target_angle+=0.7;
-        micros_prev = micros();
-    }
+    
     /*
     int d=20;
     int targetDist = analogRead(A3);//CAMBIAR

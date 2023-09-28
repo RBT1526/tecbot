@@ -21,3 +21,8 @@ void loop(){
     Serial.println(dist3);
     delay(100);
 }
+
+//s3 enfrente
+//s2 izquierda
+//s4 derecha
+//s1 atras
