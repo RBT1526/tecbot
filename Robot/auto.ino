@@ -4,12 +4,6 @@
 #include "CurieIMU.h"
 
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
-//cosas del sensor de color
-#define commonAnode true
-byte gammatable[256];
-#define redpin 3
-#define greenpin 5
-#define bluepin 6
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
 int path[20][2];

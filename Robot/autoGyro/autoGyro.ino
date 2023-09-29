@@ -11,12 +11,8 @@ float accelScale, gyroScale;
 
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 //cosas del sensor de color
-#define commonAnode true
-byte gammatable[256];
-#define redpin 3
-#define greenpin 5
-#define bluepin 6
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_614MS, TCS34725_GAIN_1X);
+uint16_t r, g, b, c;
 
 int path[20][2];
 int soli=0;
@@ -25,26 +21,25 @@ int targetColor=2;
 
 int leerColor(){
   //rutina para leer color
-  int IR = analogRead(A3);//USAR QTR
-  float red, green, blue;  
-  tcs.setInterrupt(false);  // turn on LED
-  tcs.getRGB(&red, &green, &blue);
-  tcs.setInterrupt(true);  // turn off LED
-
+  //int IR = analogRead(A3);//USAR QTR
+  for(int i=0;i<5;i++){
+    tcs.getRawData(&r, &g, &b, &c);
+    delay(25);
+  }
   lcd.clear();
   lcd.setCursor(0,0);  
-  if(green>100 && IR>500){
+  if(r<2000 && g<2000 && b<2000){//MODIFICAR
     lcd.print("NEGRO");
     return 5;
-  }else if(red>100){
+  }else if(r>4000 && g<4000 && b<4000){
     colores[1]+=1;
     lcd.print("ROJO");
     return 3;    
-  }else if(green>100){
+  }else if(r>3000 && g>9000 && b>4000){
     colores[2]+=1;
     lcd.print("VERDE");
     return 4;
-  }else if(blue>100){
+  }else if(r<3000 && g>3000 && b>5000){
     colores[0]+=1;
     lcd.print("AZUL");
     return 2;
@@ -386,15 +381,7 @@ void moveTo(int x1,int y1,int x2,int y2,int d){
             orientar(90);
         }
     }
-    //AVANZAR d
-    int targetDist = analogRead(A0);//CAMBIAR
-    int back=targetDist;
-    targetDist+=d;
-    motor_drive(velDer,velIzq);
-    while(back<targetDist){
-        back = analogRead(A0);//CAMBIAR
-    }
-    motor_drive(0,0);
+    //AVANZAR d con encoder
     xRobot=x2;
     yRobot=y2;
     return;
@@ -561,16 +548,16 @@ void leaveB(int x,int y){ //encontrar el camino mas corto
 int cubosColocados=0;
 bool tengoCubo=false;
 int coloresB(){
-    //rutina para leer color
-  int IR = analogRead(A3);//USAR QTR
-  float red, green, blue;  
-  tcs.setInterrupt(false);  // turn on LED
-  tcs.getRGB(&red, &green, &blue);
-  tcs.setInterrupt(true);  // turn off LED
-
-  if(red>100){
+    //rutina para leer color zona B
+  //int IR = analogRead(A3);//USAR QTR
+  for(int i=0;i<5;i++){
+    tcs.getRawData(&r, &g, &b, &c);
+    delay(25);
+  }
+  //encontrar color
+  if(r>4000 && g<4000 && b<4000){
     return 1;    
-  }else if(green>100){
+  }else if(r>3000 && g>9000 && b>4000){
     return 2;
   }
   return 3;
@@ -612,7 +599,7 @@ void solveB(int x,int y){
   }
     return;
 }
-void PID_Linefollow(int error){
+void PID_Linefollow(int error){//se cancela
     P = error;
     I = I + error;
     D = error - previousError;
@@ -641,15 +628,56 @@ void PID_Linefollow(int error){
     }
     motor_drive(velDer,velIzq);
 }
+bool lastDir=true,wasWhite=true;//der
+int angleSum=0,checks=0;
+void lineFollower(){
+  tcs.getRawData(&r, &g, &b, &c);
+  int plus=1;
+  while(r>4000 && g>8000 && b>5000){
+    turn(plus);
+    angleSum+=plus;
+    if(angleSum>90 || angleSum<90){
+      plus*=-1;
+    }
+    if(wasWhite==true){// && rgb == plat
+      checks++;
+      wasWhite=false;
+    }
+    if(){//rgb == white
+      wasWhite=true;
+    }
+  }
+  //AVANZA
+  if(checks<3){
+    lineFollower();
+  }
+}
 int zonaColor(){
-    //rutina para leer color
-  int IR = analogRead(A3);//USAR QTR
-  float red, green, blue;  
-  tcs.setInterrupt(false);  // turn on LED
-  tcs.getRGB(&red, &green, &blue);
-  tcs.setInterrupt(true);  // turn off LED
+    //rutina para leer color de checkpoint
+  //int IR = analogRead(A3);//USAR QTR
+  for(int i=0;i<5;i++){
+    tcs.getRawData(&r, &g, &b, &c);
+    delay(25);
+  }
     //checar el color (amarillo 1, azul claro 2, rosa 3, violeta 4)
-  return 1;
+  if(r>10000 && g>13000 && b>4000){
+    lcd.print("CHECK 1");
+    Serial.println("1");
+    return 1;
+  }else if(r<6000 && g>13000 && b>13000){
+    lcd.print("CHECK 2");
+    Serial.println("2");
+    return 2;
+  }else if(r>5000 && g>7000 && b>6000){
+    lcd.print("CHECK 3");
+    Serial.println("3");
+    return 3;
+  }else if(r>4000 && b<5000 && b<6000){
+    lcd.print("CHECK 4");
+    Serial.println("4");
+    return 4;
+  }
+  return 0;
 }
 void setup(){
     Serial.begin(9600);//115200
@@ -666,36 +694,12 @@ void setup(){
   CurieIMU.setGyroRange(250);
   microsPerReading = 1000000 / 25;
   microsPrevious = micros();
-//cosas de la pantalla
-  tcs.begin();
-  lcd.init();
-  lcd.backlight();
-
-  #if defined(ARDUINO_ARCH_ESP32)
-  ledcAttachPin(redpin, 1);
-  ledcSetup(1, 12000, 8);
-  ledcAttachPin(greenpin, 2);
-  ledcSetup(2, 12000, 8);
-  ledcAttachPin(bluepin, 3);
-  ledcSetup(3, 12000, 8);
-#else
-  pinMode(redpin, OUTPUT);
-  pinMode(greenpin, OUTPUT);
-  pinMode(bluepin, OUTPUT);
-#endif
-
-for (int i=0; i<256; i++) {
-    float x = i;
-    x /= 255;
-    x = pow(x, 2.5);
-    x *= 255;
-
-    if (commonAnode) {
-      gammatable[i] = 255 - x;
-    } else {
-      gammatable[i] = x;
-    }
-    //Serial.println(gammatable[i]);
+//cosas de la pantalla  
+  if (tcs.begin()) {
+    Serial.println("Found sensor");
+  } else {
+    Serial.println("No TCS34725 found ... check your connections");
+    while (1);
   }
 }
   
@@ -753,5 +757,5 @@ void loop(){/*
     //zona c
   //moveTo(3,5,4,5,30);
     
-    PID_Linefollow(error);
+    lineFollower();
 }

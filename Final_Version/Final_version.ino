@@ -189,7 +189,7 @@ void turn(float targetAngle,float actual_angle){
                     microsPrevious = microsPrevious + microsPerReading;
                 }
             }
-z                    
+                    
             //giro der
             analogWrite(pwm_a,velDer);//right
             digitalWrite(der_a,LOW);
@@ -209,6 +209,7 @@ z
             digitalWrite(izq_b,LOW);
             delay(2000);
         }
+    }
 }
 
 void setup() {
