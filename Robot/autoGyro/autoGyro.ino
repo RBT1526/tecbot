@@ -30,9 +30,9 @@ const int pwm_b = 3;
 const int izq_a = 4;
 const int izq_b = 5;
 const int standBy = 6;
-float velDer=80,velIzq=80;
+float velDer=80,velIzq=70;
 int vel_d = 100;
-int vel_i = 100;
+int vel_i = 90;
 int vel_pid_d = 80;
 int vel_pid_i = 80;
 bool flag = false;
@@ -41,8 +41,8 @@ float errores1 = 0;
 float target_angle;
 float error;
 float error_ant;
-float Kp = 2;
-float Kd = 0.07;
+float Kp = 1;
+float Kd = 0.01;
 float Ki = 1;
 
 int path[20][2];
@@ -401,19 +401,19 @@ void moveTo(int x1,int y1,int x2,int y2,float d){
         //mover en y
         if(y1>y2){
             orientar(0);
-            moveForward(0,d);
+            avanzar();
         }else{
             orientar(180);
-            moveForward(180,d);
+            avanzar();
         }
     }else{
         //mover en x
         if(x1>x2){
             orientar(270);
-            moveForward(270,d);
+            avanzar();
         }else{
             orientar(90);
-            moveForward(90,d);
+            avanzar();
         }
     }
     xRobot=x2;
@@ -671,12 +671,11 @@ float get_motion(){
         gz = convertRawGyro(giz);
         filter.updateIMU(gx, gy, gz, ax, ay, az);
         heading = filter.getYaw();
-        /*Serial.println(heading);*/
         microsPrevious = microsPrevious + microsPerReading;
         }
     return heading;
 }
-void moveForward(float target,float d){//CAMBIAR
+/*void moveForward(float target,float d){//se cancela
   unsigned long millisPrev=millis();
   unsigned long millisNow=millis();
   do{
@@ -723,6 +722,67 @@ void moveForward(float target,float d){//CAMBIAR
   analogWrite(pwm_b,0);
   digitalWrite(izq_a,LOW);
   digitalWrite(izq_b,LOW);
+}*/
+void pid_check(float target){
+    
+    float angle_check = get_motion();
+    error = target - angle_check;
+    if(error > 300){
+        error = target - (360+angle_check);
+    }
+    if(error < -300){
+        error = (angle_check-(360+target))*-1;
+    }
+    
+    vel_pid_i = vel_i - (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant));//i+error
+    vel_pid_d = vel_d + (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant)); 
+    error_ant = error;
+
+    if (vel_pid_i > 255) {
+        vel_pid_i = 255;
+    }
+    if (vel_pid_i < 0) {
+        vel_pid_i = 0;
+    }
+    if (vel_pid_d > 255) {
+        vel_pid_i = 255;
+    }
+    if (vel_pid_d < 0) {
+        vel_pid_d = 0;
+    }
+    digitalWrite(standBy, HIGH);
+    /*
+    Serial.print("veld = ");
+    Serial.print(vel_pid_d);
+    Serial.print(" veli = ");
+    Serial.print(vel_pid_i);
+    Serial.print("angle = ");
+    Serial.print(angle_check);
+    Serial.print(" target = ");
+    Serial.print(target);
+    Serial.print(" error = ");
+    Serial.println(error);
+    */
+}
+void avanzar(){
+    analogWrite(pwm_a, vel_pid_d);
+    digitalWrite(der_a,HIGH);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,vel_pid_i);
+    digitalWrite(izq_a,HIGH);
+    digitalWrite(izq_b,LOW);
+    if (micros() - microsPrevious >= 50000) {
+        pid_check(target_angle);
+        microsPrevious = micros();
+    }
+}
+void stop(){
+    analogWrite(pwm_a, 0);
+    digitalWrite(der_a,LOW);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,0);
+    digitalWrite(izq_a,LOW);
+    digitalWrite(izq_b,LOW);
 }
 bool lastDir=true,wasWhite=true;//der
 int angleSum=0,checks=0;
@@ -744,7 +804,7 @@ void lineFollower(){
       wasWhite=true;
     }*/
   }
-  moveForward(headingInicial,1);//CAMBIAR CUANTO
+  avanzar();//CAMBIAR CUANTO
   if(checks<3){
     lineFollower();
   }
@@ -785,11 +845,13 @@ void setServo(uint8_t n_servo, int angulo) {
 }
 void setup(){
     Serial.begin(9600);//115200
+    //lcd pantalla
     lcd.init();
     lcd.backlight();
     lcd.clear();
     lcd.setCursor(0,0);  
     lcd.print("setup");
+    //motores
     pinMode(standBy, OUTPUT);
     pinMode(pwm_a, OUTPUT);
     pinMode(der_a, OUTPUT);
@@ -802,19 +864,34 @@ void setup(){
   servos.begin();
   servos.setPWMFreq(60); //Frecuecia PWM de 60Hz o T=16,66ms
   //cosas del IMU
-  CurieIMU.begin();
-  CurieIMU.autoCalibrateGyroOffset();
-  CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
-  CurieIMU.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
-  CurieIMU.autoCalibrateAccelerometerOffset(Z_AXIS, 0);
-  CurieIMU.setGyroRate(25);
-  CurieIMU.setAccelerometerRate(25);
-  filter.begin(25);
-  CurieIMU.setAccelerometerRange(2);
-  CurieIMU.setGyroRange(250);
-  microsPerReading = 1000000 / 25;
-  microsPrevious = micros();
-  //cosas de la pantalla  
+   CurieIMU.begin();
+    CurieIMU.autoCalibrateGyroOffset();
+    CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
+    CurieIMU.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
+    CurieIMU.autoCalibrateAccelerometerOffset(Z_AXIS, 1);
+    CurieIMU.setGyroRate(25);
+    CurieIMU.setAccelerometerRate(25);
+    filter.begin(25);
+    CurieIMU.setAccelerometerRange(2);
+    CurieIMU.setGyroRange(250);
+
+    int aix, aiy, aiz;
+    int gix, giy, giz;
+    float ax, ay, az;
+    float gx, gy, gz;
+    CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
+    ax = convertRawAcceleration(aix);
+    ay = convertRawAcceleration(aiy);
+    az = convertRawAcceleration(aiz);
+    gx = convertRawGyro(gix);
+    gy = convertRawGyro(giy);
+    gz = convertRawGyro(giz);
+    filter.updateIMU(gx, gy, gz, ax, ay, az);
+    target_angle = filter.getYaw();
+
+    microsPrevious = micros();
+    microsPerReading = 1000000 / 28;
+  //cosas del rgb  
   if (tcs.begin()) {
     Serial.println("Found sensor");
   } else {
@@ -825,75 +902,87 @@ void setup(){
 }
   
 void loop(){
-  //rutina zona a
-  lcd.clear();
-  lcd.setCursor(0,0);  
-  lcd.print("ZONA A");
-  setServo(14,180);//guardar
-  setServo(15,60);
-  scanMaze(2,5);
-  soli=0;
-  solveMaze(xRobot,yRobot);
-  goTo(xRobot,yRobot);
-  soli=0;
-  if(colores[1]==5){
-    targetColor=3;
-  }else if(colores[2]==5){
-    targetColor=4;
-  }
-  fin=false;
-  for(int i=1;i<6;i++){
-    for(int j=1;j<4;j++){
-        mazeVisitados[i][j]=0;
+  int z=zonaColor();
+  if(z==1){
+    //rutina zona a
+    lcd.clear();
+    lcd.setCursor(0,0);  
+    lcd.print("ZONA A");
+    setServo(14,180);//guardar
+    setServo(15,60);
+    scanMaze(2,5);
+    soli=0;
+    solveMaze(xRobot,yRobot);
+    goTo(xRobot,yRobot);
+    soli=0;
+    if(colores[1]==5){
+      targetColor=3;
+    }else if(colores[2]==5){
+      targetColor=4;
     }
-  }
-  findColor(3,0);
-  goTo(3,0);
-  goBack(xRobot,yRobot);
-  soli=0;
-  //rutina rampa
-  lcd.clear();
-  lcd.setCursor(0,0);  
-  lcd.print("RAMPA");
-  setServo(14,40);//cerrar
-  delay(500);
-  setServo(15,75);
-  downRamp();
-  //rutina zona b
-  lcd.clear();
-  lcd.setCursor(0,0);  
-  lcd.print("ZONA B");
-  for(int i=1;i<6;i++){
-    for(int j=1;j<4;j++){
-        mazeColores[i][j]=0;
-    }
-  }
-  mazeColores[6][3]=-1;
-  xRobot=2;
-  yRobot=0;
-  do{
+    fin=false;
     for(int i=1;i<6;i++){
-        for(int j=1;j<4;j++){
-            mazeVisitados[i][j]=0;
-        }
+      for(int j=1;j<4;j++){
+          mazeVisitados[i][j]=0;
+      }
     }
-    solveB(xRobot,yRobot);
-  }while(cubosColocados<3);
-  for(int i=1;i<6;i++){
-    for(int j=1;j<4;j++){
-      mazeVisitados[i][j]=0;
+    findColor(3,0);
+    goTo(3,0);
+    goBack(xRobot,yRobot);
+    soli=0;
+  }else if(z==2){
+    //rutina rampa
+    lcd.clear();
+    lcd.setCursor(0,0);  
+    lcd.print("RAMPA");
+    setServo(14,40);//cerrar
+    delay(500);
+    setServo(15,75);
+    downRamp();
+  }else if(z==3){
+    //rutina zona b
+    lcd.clear();
+    lcd.setCursor(0,0);  
+    lcd.print("ZONA B");
+    for(int i=1;i<6;i++){
+      for(int j=1;j<4;j++){
+          mazeColores[i][j]=0;
+      }
     }
+    mazeColores[6][3]=-1;
+    xRobot=2;
+    yRobot=0;
+    do{
+      for(int i=1;i<6;i++){
+          for(int j=1;j<4;j++){
+              mazeVisitados[i][j]=0;
+          }
+      }
+      solveB(xRobot,yRobot);
+    }while(cubosColocados<3);
+    for(int i=1;i<6;i++){
+      for(int j=1;j<4;j++){
+        mazeVisitados[i][j]=0;
+      }
+    }
+    fin=false;
+    soli=0;
+    leaveB(xRobot,yRobot);
+    goTo(xRobot,yRobot);
   }
-  fin=false;
-  soli=0;
-  leaveB(xRobot,yRobot);
-  goTo(xRobot,yRobot);
   //zona c
   lcd.clear();
   lcd.setCursor(0,0);  
   lcd.print("ZONA C");
   moveTo(3,5,4,5,30);    
   lineFollower();
-  //moveForward(180,15);
-  //delay(100000);
+  int lastMicros=micros();
+  int microsYa=micros();
+  target_angle=get_motion();
+  while(microsYa-lastMicros<1000000){
+    avanzar();
+    microsYa=micros();
+  }
+  stop();
+  delay(100000);
 }
