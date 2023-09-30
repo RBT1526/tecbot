@@ -775,12 +775,16 @@ void pid_check(float target){
     */
 }
 void avanzar(float d){
+  lcd.clear();
+  lcd.setCursor(0,0);  
+  lcd.print("jala");
     analogWrite(pwm_a, vel_pid_d);
     digitalWrite(der_a,HIGH);
     digitalWrite(der_b,LOW);
     analogWrite(pwm_b,vel_pid_i);
     digitalWrite(izq_a,HIGH);
     digitalWrite(izq_b,LOW);
+    unsigned long lastMicros=micros();
     unsigned long microsYa=micros();
     target_angle=get_motion();
     while(microsYa-lastMicros<1000000*d/16){
@@ -791,6 +795,9 @@ void avanzar(float d){
       microsYa=micros();
     }
     stop();
+    lcd.clear();
+  lcd.setCursor(1,0);  
+  lcd.print("termino");
 }
 void stop(){
     analogWrite(pwm_a, 0);
@@ -805,8 +812,7 @@ int angleSum=0,checks=0;
 void lineFollower(){
   tcs.getRawData(&r, &g, &b, &c);
   //int headingInicial=get_motion();
-  int plus=1;
-  lcd.clear();
+  int plus=1;  
   while(r>6000 && g>14000 && b>7000){
     tcs.getRawData(&r, &g, &b, &c);
     turn(plus);
@@ -815,20 +821,28 @@ void lineFollower(){
       plus*=-1;
       delay(25);
     }
+    lcd.clear();
     lcd.setCursor(0,0);  
     lcd.print(angleSum);
     if(wasWhite==true && r<12000 && g<23000 && b>17000){// && rgb == plat
       checks++;
       wasWhite=false;
-      lcd.clear();
-      lcd.setCursor(0,0);  
-      lcd.print(checks);
     }
     if(r>12000 && g>23000 && b>17000){//rgb == white
       wasWhite=true;
     }
   }
-  avanzar(10);//CAMBIAR CUANTO
+  lcd.clear();
+  lcd.setCursor(1,0);  
+  lcd.print("avanza bro");
+  analogWrite(pwm_a, 100);
+  digitalWrite(der_a,HIGH);
+  digitalWrite(der_b,LOW);
+  analogWrite(pwm_b,100);
+  digitalWrite(izq_a,HIGH);
+  digitalWrite(izq_b,LOW);
+  delay(250);
+  stop();
   if(checks<3){
     lineFollower();
   }
@@ -929,7 +943,7 @@ void setup(){
 }
   
 void loop(){
-  int z=zonaColor();
+  /*int z=zonaColor();
   z=4;
   if(z==1){
     //rutina zona a
@@ -1001,10 +1015,10 @@ void loop(){
     //zona c
     lcd.clear();
     lcd.setCursor(0,0);  
-    lcd.print("ZONA C");
+    lcd.print("ZONA C");*/
     //moveTo(3,5,4,5,30);    
     lineFollower();
-  }
+  //}
     delay(100000);
 }
 //1s = 16cm
