@@ -218,7 +218,7 @@ void turn(float targetAngle){
 
          bool si=false;
 
-        if(heading+180<targetAngle){
+        if(heading+180<targetAngle && heading<180){
             //giro der
             analogWrite(pwm_a,velDer);//right
             digitalWrite(der_a,LOW);
@@ -252,7 +252,7 @@ void turn(float targetAngle){
             analogWrite(pwm_b,0);
             digitalWrite(izq_a,LOW);
             digitalWrite(izq_b,LOW);
-        }else if(heading-180>targetAngle){
+        }else if(heading-180>targetAngle && heading>180){
             //giro izq
             analogWrite(pwm_a,velDer);//left
             digitalWrite(der_a,HIGH);
@@ -463,7 +463,7 @@ void scanMaze(int x,int y){
           }
           orientar(prevO);
           int dist= pow(10,log10(s/1821.2)/-0.65);
-          if(dist<15 && dist>10){
+          if(dist<9){
               //1 si hay pared
               mazeParedes[i][y][x]=1;
           }else{
@@ -676,11 +676,11 @@ float get_motion(){
         }
     return heading;
 }
-void moveForward(float target,float d){
-  /*unsigned long millisPrev=millis();
+void moveForward(float target,float d){//CAMBIAR
+  unsigned long millisPrev=millis();
   unsigned long millisNow=millis();
   do{
-    millisNow=millis();*/
+    millisNow=millis();
     analogWrite(pwm_a, vel_pid_d);
     digitalWrite(der_a,HIGH);
     digitalWrite(der_b,LOW);
@@ -716,18 +716,19 @@ void moveForward(float target,float d){
           vel_pid_d = 0;
       }
     }
-  //}while(millisNow-millisPrev<d*1000);
-  /*analogWrite(pwm_a,0);//apagar motores
+  }while(millisNow-millisPrev<d*23);//689 = 30cm
+  analogWrite(pwm_a,0);//apagar motores
   digitalWrite(der_a,LOW);
   digitalWrite(der_b,LOW);
   analogWrite(pwm_b,0);
   digitalWrite(izq_a,LOW);
-  digitalWrite(izq_b,LOW);*/
+  digitalWrite(izq_b,LOW);
 }
 bool lastDir=true,wasWhite=true;//der
 int angleSum=0,checks=0;
 void lineFollower(){
   tcs.getRawData(&r, &g, &b, &c);
+  int headingInicial=get_motion();
   int plus=1;
   while(r>4000 && g>8000 && b>5000){
     turn(plus);
@@ -743,7 +744,7 @@ void lineFollower(){
       wasWhite=true;
     }*/
   }
-  //AVANZA
+  moveForward(headingInicial,1);//CAMBIAR CUANTO
   if(checks<3){
     lineFollower();
   }
@@ -755,6 +756,8 @@ int zonaColor(){
     tcs.getRawData(&r, &g, &b, &c);
     delay(25);
   }
+  lcd.clear();
+  lcd.setCursor(0,0);  
     //checar el color (amarillo 1, azul claro 2, rosa 3, violeta 4)
   if(r>10000 && g>13000 && b>4000){
     lcd.print("CHECK 1");
@@ -781,16 +784,22 @@ void setServo(uint8_t n_servo, int angulo) {
   servos.setPWM(n_servo, 0, duty);  
 }
 void setup(){
-  pinMode(standBy, OUTPUT);
+    Serial.begin(9600);//115200
+    lcd.init();
+    lcd.backlight();
+    lcd.clear();
+    lcd.setCursor(0,0);  
+    lcd.print("setup");
+    pinMode(standBy, OUTPUT);
     pinMode(pwm_a, OUTPUT);
     pinMode(der_a, OUTPUT);
     pinMode(der_b, OUTPUT);
     pinMode(pwm_b, OUTPUT);
     pinMode(izq_a, OUTPUT);
     pinMode(izq_b, OUTPUT);
-    digitalWrite(standBy, LOW);
-  Serial.begin(9600);//115200
+    digitalWrite(standBy, HIGH);
   //cosas servos
+  servos.begin();
   servos.setPWMFreq(60); //Frecuecia PWM de 60Hz o T=16,66ms
   //cosas del IMU
   CurieIMU.begin();
@@ -816,9 +825,12 @@ void setup(){
 }
   
 void loop(){
-  /*//rutina zona a
+  //rutina zona a
+  lcd.clear();
+  lcd.setCursor(0,0);  
+  lcd.print("ZONA A");
   setServo(14,180);//guardar
-  setServo(15,75);
+  setServo(15,60);
   scanMaze(2,5);
   soli=0;
   solveMaze(xRobot,yRobot);
@@ -840,11 +852,17 @@ void loop(){
   goBack(xRobot,yRobot);
   soli=0;
   //rutina rampa
+  lcd.clear();
+  lcd.setCursor(0,0);  
+  lcd.print("RAMPA");
   setServo(14,40);//cerrar
   delay(500);
   setServo(15,75);
   downRamp();
   //rutina zona b
+  lcd.clear();
+  lcd.setCursor(0,0);  
+  lcd.print("ZONA B");
   for(int i=1;i<6;i++){
     for(int j=1;j<4;j++){
         mazeColores[i][j]=0;
@@ -871,10 +889,11 @@ void loop(){
   leaveB(xRobot,yRobot);
   goTo(xRobot,yRobot);
   //zona c
+  lcd.clear();
+  lcd.setCursor(0,0);  
+  lcd.print("ZONA C");
   moveTo(3,5,4,5,30);    
-  lineFollower();*/
-  Serial.print("empezo");
-  moveForward(180,1);
-  Serial.print("termino");
+  lineFollower();
+  //moveForward(180,15);
   //delay(100000);
 }

@@ -9,8 +9,8 @@ const int pwm_a = 9;
 const int der_a = 8;
 const int der_b = 7;
 const int pwm_b = 3;
-const int izq_a = 5;
-const int izq_b = 4;
+const int izq_a = 4;
+const int izq_b = 5;
 const int standBy = 6;
 float velDer=80,velIzq=70;
 
@@ -28,7 +28,7 @@ float error;
 float error_ant;
 
 
-float Kp = 3;
+float Kp = 2;
 
 
 
@@ -85,10 +85,15 @@ void pid_check(float target){
         vel_pid_d = 0;
     }
 
-    //Serial.print("veld = ");
-    //Serial.print(vel_pid_d);
-    //Serial.print(" veli = ");
-    //Serial.println(vel_pid_i);
+    Serial.print("veld = ");
+    Serial.print(vel_pid_d);
+    Serial.print(" veli = ");
+    Serial.print(vel_pid_i);
+    Serial.print(" angle: ");
+    Serial.print(angle_check);
+    Serial.print(" Target: ");
+    Serial.println(target);
+
     
 }/*
 void pid_vuelta(float target){
@@ -336,6 +341,7 @@ void turn(float targetAngle){
 }
 
 void setup() {
+    Serial.begin(115200);
     pinMode(standBy, OUTPUT);
     pinMode(pwm_a, OUTPUT);
     pinMode(der_a, OUTPUT);
@@ -343,8 +349,9 @@ void setup() {
     pinMode(pwm_b, OUTPUT);
     pinMode(izq_a, OUTPUT);
     pinMode(izq_b, OUTPUT);
-    digitalWrite(standBy, HIGH);
-    Serial.begin(115200);
+    digitalWrite(standBy, LOW);
+    
+
   CurieIMU.begin();
   CurieIMU.autoCalibrateGyroOffset();
   CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
@@ -355,22 +362,25 @@ void setup() {
   filter.begin(25);
   CurieIMU.setAccelerometerRange(2);
   CurieIMU.setGyroRange(250);
-  microsPerReading = 1000000 / 28;
+  
     int aix, aiy, aiz;
     int gix, giy, giz;
     float ax, ay, az;
     float gx, gy, gz;
-  microsPrevious = micros();
-  micros_inicio = micros();
-  CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
-        ax = convertRawAcceleration(aix);
-        ay = convertRawAcceleration(aiy);
-        az = convertRawAcceleration(aiz);
+  
+CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
+ax = convertRawAcceleration(aix);
+ay = convertRawAcceleration(aiy);
+az = convertRawAcceleration(aiz);
         gx = convertRawGyro(gix);
         gy = convertRawGyro(giy);
         gz = convertRawGyro(giz);
         filter.updateIMU(gx, gy, gz, ax, ay, az);
         target_angle = filter.getYaw();
+
+microsPerReading = 1000000 / 28;
+microsPrevious = micros();
+micros_inicio = micros();
 }
 
 void loop() {

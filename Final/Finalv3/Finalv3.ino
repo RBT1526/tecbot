@@ -6,11 +6,11 @@ unsigned long microsPerReading, microsPrevious;
 unsigned long micros_inicio;
 unsigned long micros_prev;
 const int pwm_a = 9;
-const int der_a = 8;
-const int der_b = 7;
+const int der_a = 4;
+const int der_b = 5;
 const int pwm_b = 3;
-const int izq_a = 4;
-const int izq_b = 5;
+const int izq_a = 8;
+const int izq_b = 7;
 const int standBy = 6;
 float velDer=80,velIzq=80;
 
@@ -88,22 +88,13 @@ void pid_check(float target){
     if (vel_pid_d < 0) {
         vel_pid_d = 0;
     }
+    digitalWrite(standBy, HIGH);
 
     
 }
 
-float get_distance(){
-    int s = analogRead(A2);
-    float dist= pow(10,log10(s/1821.2)/-0.65);
-    return dist;
-}
-float get_distance_b(){
-    int s = analogRead(A1);
-    float dist= pow(10,log10(s/1821.2)/-0.65);
-    return dist;
-}
-float get_distance_c(){
-    int s = analogRead(A2);
+float get_distance(int port){
+    int s = analogRead(port);
     float dist= pow(10,log10(s/1821.2)/-0.65);
     return dist;
 }
@@ -285,7 +276,7 @@ void setup() {
     pinMode(pwm_b, OUTPUT);
     pinMode(izq_a, OUTPUT);
     pinMode(izq_b, OUTPUT);
-    digitalWrite(standBy, HIGH);
+    digitalWrite(standBy, LOW);
     Serial.begin(115200);
   CurieIMU.begin();
   CurieIMU.autoCalibrateGyroOffset();
@@ -328,61 +319,8 @@ void loop() {
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
     pid_check(target_angle);
-    //pid_check(358.0);
     }
-    
-    /*
-    int d=20;
-    int targetDist = analogRead(A3);//CAMBIAR
-    int back=targetDist;
-    targetDist+=d;
-    if(back<targetDist){
-        int back = analogRead(A3);//CAMBIAR
-        Serial.print(back+" "+targetDist);
-        analogWrite(pwm_a, vel_pid_d);
-        digitalWrite(der_a,HIGH);
-        digitalWrite(der_b,LOW);
-        analogWrite(pwm_b,vel_pid_i);
-        digitalWrite(izq_a,HIGH);
-        digitalWrite(izq_b,LOW);
-        unsigned long microsNow;
-        microsNow = micros();
-        if (microsNow - microsPrevious >= 100000) {
-        pid_check(target_angle);
-    }else{
-        analogWrite(pwm_a, 0);
-        digitalWrite(der_a,LOW);
-        digitalWrite(der_b,LOW);
-        analogWrite(pwm_b, 0);
-        digitalWrite(izq_a,LOW);
-        digitalWrite(izq_b,LOW);
-    }
-    */
-    if (get_distance() < 5){
-        analogWrite(pwm_a,0);
-            digitalWrite(der_a,LOW);
-            digitalWrite(der_b,LOW);
-            analogWrite(pwm_b,0);
-            digitalWrite(izq_a,LOW);
-            digitalWrite(izq_b,LOW);
-            delay(500);
-            turn(90);
-
-    }
-    
-    /*
-    if(microsNow - micros_inicio >= 2000000){
-        analogWrite(pwm_a,0);
-            digitalWrite(der_a,LOW);
-            digitalWrite(der_b,LOW);
-            analogWrite(pwm_b,0);
-            digitalWrite(izq_a,LOW);
-            digitalWrite(izq_b,LOW);
-            delay(2000);
-        turn(90);
-        micros_inicio = micros();
-    }
-    */
+   
 
 
 }

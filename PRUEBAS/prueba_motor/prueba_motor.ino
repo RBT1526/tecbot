@@ -19,13 +19,27 @@ Serial.begin(115200);
 
 }
 void loop(){
-analogWrite(pwm_a,150);//front
+analogWrite(pwm_a,50);//front
 digitalWrite(der_a,HIGH);
 digitalWrite(der_b,LOW);
 analogWrite(pwm_b,150);
 digitalWrite(izq_a,HIGH);
 digitalWrite(izq_b,LOW);
-//delay(2000);
+delay(2000);
+analogWrite(pwm_a,150);//front
+digitalWrite(der_a,HIGH);
+digitalWrite(der_b,LOW);
+analogWrite(pwm_b,50);
+digitalWrite(izq_a,HIGH);
+digitalWrite(izq_b,LOW);
+delay(2000);
+analogWrite(pwm_a,150);//front
+digitalWrite(der_a,LOW);
+digitalWrite(der_b,HIGH);
+analogWrite(pwm_b,150);
+digitalWrite(izq_a,LOW);
+digitalWrite(izq_b,HIGH);
+delay(2000);
 /*analogWrite(pwm_a,150);//left
 digitalWrite(der_a,HIGH);
 digitalWrite(der_b,LOW);

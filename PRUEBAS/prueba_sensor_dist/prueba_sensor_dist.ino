@@ -1,6 +1,10 @@
-
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,20,4); 
 void setup(){
     Serial.begin(115200);
+    lcd.init();
+    lcd.backlight();
 }
 void loop(){
     int s = analogRead(A0);//izq
@@ -11,6 +15,9 @@ void loop(){
     float dist2= pow(10,log10(s2/1821.2)/-0.65);
     int s3 = analogRead(A3);//front
     float dist3= pow(10,log10(s3/1821.2)/-0.65);
+    lcd.clear();
+    lcd.setCursor(0,0);  
+    lcd.print(dist3);
     Serial.print("s1: ");
     Serial.print(dist);
    Serial.print(" s2: ");
