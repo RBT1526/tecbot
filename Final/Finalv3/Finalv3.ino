@@ -60,6 +60,7 @@ float get_motion(){
 }
 void pid_check(float target){
     
+    
     float angle_check = get_motion();
     
     
@@ -96,17 +97,6 @@ float get_distance(){
     int s = analogRead(A2);
     float dist= pow(10,log10(s/1821.2)/-0.65);
     return dist;
-}
-float get_distance_b(){
-    int s = analogRead(A1);
-    float dist= pow(10,log10(s/1821.2)/-0.65);
-    return dist;
-}
-float get_distance_c(){
-    int s = analogRead(A2);
-    float dist= pow(10,log10(s/1821.2)/-0.65);
-    return dist;
-}
 void turn(float targetAngle){
     int aix, aiy, aiz;
     int gix, giy, giz;
@@ -324,65 +314,14 @@ void loop() {
     analogWrite(pwm_b,vel_pid_i);
     digitalWrite(izq_a,HIGH);
     digitalWrite(izq_b,LOW);
+
     unsigned long microsNow;
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
     pid_check(target_angle);
     //pid_check(358.0);
     }
-    
-    /*
-    int d=20;
-    int targetDist = analogRead(A3);//CAMBIAR
-    int back=targetDist;
-    targetDist+=d;
-    if(back<targetDist){
-        int back = analogRead(A3);//CAMBIAR
-        Serial.print(back+" "+targetDist);
-        analogWrite(pwm_a, vel_pid_d);
-        digitalWrite(der_a,HIGH);
-        digitalWrite(der_b,LOW);
-        analogWrite(pwm_b,vel_pid_i);
-        digitalWrite(izq_a,HIGH);
-        digitalWrite(izq_b,LOW);
-        unsigned long microsNow;
-        microsNow = micros();
-        if (microsNow - microsPrevious >= 100000) {
-        pid_check(target_angle);
-    }else{
-        analogWrite(pwm_a, 0);
-        digitalWrite(der_a,LOW);
-        digitalWrite(der_b,LOW);
-        analogWrite(pwm_b, 0);
-        digitalWrite(izq_a,LOW);
-        digitalWrite(izq_b,LOW);
-    }
-    */
-    if (get_distance() < 5){
-        analogWrite(pwm_a,0);
-            digitalWrite(der_a,LOW);
-            digitalWrite(der_b,LOW);
-            analogWrite(pwm_b,0);
-            digitalWrite(izq_a,LOW);
-            digitalWrite(izq_b,LOW);
-            delay(500);
-            turn(90);
 
-    }
-    
-    /*
-    if(microsNow - micros_inicio >= 2000000){
-        analogWrite(pwm_a,0);
-            digitalWrite(der_a,LOW);
-            digitalWrite(der_b,LOW);
-            analogWrite(pwm_b,0);
-            digitalWrite(izq_a,LOW);
-            digitalWrite(izq_b,LOW);
-            delay(2000);
-        turn(90);
-        micros_inicio = micros();
-    }
-    */
 
 
 }

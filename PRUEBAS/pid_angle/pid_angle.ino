@@ -74,7 +74,14 @@ void pid_check(float target){
     Serial.print("veld = ");
     Serial.print(vel_pid_d);
     Serial.print(" veli = ");
-    Serial.println(vel_pid_i);
+    Serial.print(vel_pid_i);
+    Serial.print("angle = ");
+    Serial.print(angle_check);
+    Serial.print(" target = ");
+    Serial.print(target);
+    Serial.print(" error = ");
+    Serial.println(error);
+
 }
 
 void setup() {
@@ -97,7 +104,10 @@ void setup() {
   filter.begin(25);
   CurieIMU.setAccelerometerRange(2);
   CurieIMU.setGyroRange(250);
+
   microsPerReading = 1000000 / 28;
+
+
     int aix, aiy, aiz;
     int gix, giy, giz;
     float ax, ay, az;
@@ -111,6 +121,8 @@ void setup() {
         gy = convertRawGyro(giy);
         gz = convertRawGyro(giz);
         filter.updateIMU(gx, gy, gz, ax, ay, az);
+
+        
         target_angle = filter.getYaw();
 }
 
