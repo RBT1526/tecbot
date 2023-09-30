@@ -14,7 +14,7 @@ const int izq_b = 5;
 const int standBy = 6;
 float velDer=80,velIzq=70;
 
-int vel_d = 95;
+int vel_d = 90;
 int vel_i = 100;
 int vel_pid_d = 0;
 int vel_pid_i = 0;

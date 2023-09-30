@@ -60,6 +60,7 @@ float get_motion(){
 }
 void pid_check(float target){
     
+    
     float angle_check = get_motion();
     
     
@@ -93,11 +94,10 @@ void pid_check(float target){
     
 }
 
-float get_distance(int port){
-    int s = analogRead(port);
+float get_distance(){
+    int s = analogRead(A2);
     float dist= pow(10,log10(s/1821.2)/-0.65);
     return dist;
-}
 void turn(float targetAngle){
     int aix, aiy, aiz;
     int gix, giy, giz;
@@ -315,12 +315,13 @@ void loop() {
     analogWrite(pwm_b,vel_pid_i);
     digitalWrite(izq_a,HIGH);
     digitalWrite(izq_b,LOW);
+
     unsigned long microsNow;
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
     pid_check(target_angle);
     }
-   
+
 
 
 }
