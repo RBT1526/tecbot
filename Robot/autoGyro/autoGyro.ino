@@ -3,7 +3,6 @@
 #include "Adafruit_TCS34725.h"//sensor rgb TCS34725
 #include <CurieIMU.h>//giroscopio
 #include <MadgwickAHRS.h>//PID
-#include <ezButton.h>//encoder
 #include <Adafruit_PWMServoDriver.h>//servo
 
 //declarar servos
@@ -20,6 +19,31 @@ LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars
 //cosas del sensor de color
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_614MS, TCS34725_GAIN_1X);
 uint16_t r, g, b, c;
+
+//PID
+unsigned long micros_inicio;
+unsigned long micros_prev;
+const int pwm_a = 9;
+const int der_a = 8;
+const int der_b = 7;
+const int pwm_b = 3;
+const int izq_a = 4;
+const int izq_b = 5;
+const int standBy = 6;
+float velDer=80,velIzq=80;
+int vel_d = 100;
+int vel_i = 100;
+int vel_pid_d = 0;
+int vel_pid_i = 0;
+bool flag = false;
+float errores = 0;
+float errores1 = 0;
+float target_angle;
+float error;
+float error_ant;
+float Kp = 2;
+float Kd = 0.07;
+float Ki = 1;
 
 int path[20][2];
 int soli=0;
@@ -119,7 +143,7 @@ int orientacion=0;
 int xRobot=2;
 int yRobot=5;
 //motores
-const int pwm_a = 3;
+/*const int pwm_a = 3;
 const int der_a = 4;
 const int der_b = 5;
 const int pwm_b = 9;
@@ -140,7 +164,7 @@ uint8_t Kdfinal;
 float Pvalue;
 float Ivalue;
 float Dvalue;
-int P, D, I, previousError, PIDvalue, error;
+int P, D, I, previousError, PIDvalue, error;*/
 //cosas para calcular angulos
 float convertRawAcceleration(int aRaw) {
   float a = (aRaw * 2.0) / 32768.0;
@@ -377,18 +401,21 @@ void moveTo(int x1,int y1,int x2,int y2,float d){
         //mover en y
         if(y1>y2){
             orientar(0);
+            moveForward(0,d);
         }else{
             orientar(180);
+            moveForward(180,d);
         }
     }else{
         //mover en x
         if(x1>x2){
             orientar(270);
+            moveForward(270,d);
         }else{
             orientar(90);
+            moveForward(90,d);
         }
     }
-    //AVANZAR d con encoder
     xRobot=x2;
     yRobot=y2;
     return;
@@ -420,17 +447,29 @@ void goBack(int x1,int y1){ //parametros = posicion inicial
 //función recursiva para checar cada cuadro posible
 void scanMaze(int x,int y){
     for(int i=0;i<4;i++){ //checa muros
-        if(mazeParedes[i][y][x]==0){
-            //CHECAR CUAL SENSOR USAR
-            int s = analogRead(A0);
-            int dist= pow(10,log10(s/1821.2)/-0.65);
-            if(dist<20){
-                //1 si hay pared
-                mazeParedes[i][y][x]=1;
-            }else{
-                //2 si no hay
-                mazeParedes[i][y][x]=2;
-            }
+      if(mazeParedes[i][y][x]==0){
+          //CHECAR CUAL SENSOR USAR
+          int prevO=orientacion;
+          int s;
+          orientar(0);
+          if(i==0){
+            s = analogRead(A3);//front
+          }else if(i==1){
+            s = analogRead(A1);//der
+          }else if(i==2){
+            s = analogRead(A2);//back
+          }else{
+            s = analogRead(A0);//izq
+          }
+          orientar(prevO);
+          int dist= pow(10,log10(s/1821.2)/-0.65);
+          if(dist<15 && dist>10){
+              //1 si hay pared
+              mazeParedes[i][y][x]=1;
+          }else{
+              //2 si no hay
+              mazeParedes[i][y][x]=2;
+          }
         }
     }
   for(int i=0;i<4;i++){ //moverme a cada direccion
@@ -526,9 +565,7 @@ void downRamp(){
     //stop
     center(0,270);
     orientar(90);
-    garra.write(0);
-    delay(250);
-    elevador.write(180);
+    //abrir garra
     orientar(180);
     return;
 }
@@ -590,9 +627,9 @@ void solveB(int x,int y){
             //lo agarro
             mazeColores[y2][x2]=3;
             tengoCubo=true;
-            elevador.write(60);//cerrar
-            delay(250);
-            garra.write(80);
+            setServo(14,40);//cerrar
+            delay(500);
+            setServo(15,75);
             moveTo(xRobot,yRobot,x2,y2,12.5);
             solveB(x2,y2);
             moveTo(xRobot,yRobot,x,y,-30);
@@ -603,9 +640,9 @@ void solveB(int x,int y){
             //lo dejo
             cubosColocados+=1;
             mazeColores[y2][x2]=4;//ya no voy a este cuadro
-            garra.write(0);//abrir
-            delay(250);
-            elevador.write(180);
+            setServo(14,40);//abrir
+            delay(500);
+            setServo(15,40);
             moveTo(xRobot,yRobot,x2,y2,-17.5);
         }else if(mazeColores[y2][x2]==3){
             moveTo(xRobot,yRobot,x2,y2,12.5);            
@@ -616,34 +653,74 @@ void solveB(int x,int y){
   }
     return;
 }
-void PID_Linefollow(int error){//se cancela
-    P = error;
-    I = I + error;
-    D = error - previousError;
-    
-    Pvalue = (Kp/pow(10,multiP))*P;
-    Ivalue = (Ki/pow(10,multiI))*I;
-    Dvalue = (Kd/pow(10,multiD))*D; 
-
-    float PIDvalue = Pvalue + Ivalue + Dvalue;
-    previousError = error;
-    int speed=50;
-    velIzq = speed - PIDvalue;
-    velDer = speed + PIDvalue;
-
-    if (velIzq > 255) {
-      velIzq = 255;
+float get_motion(){
+    int aix, aiy, aiz;
+    int gix, giy, giz;
+    float ax, ay, az;
+    float gx, gy, gz;
+    float heading;
+    unsigned long microsNow;
+    microsNow = micros();
+    if (microsNow - microsPrevious >= microsPerReading) {
+        CurieIMU.readMotionSensor(aix, aiy, aiz, gix, giy, giz);
+        ax = convertRawAcceleration(aix);
+        ay = convertRawAcceleration(aiy);
+        az = convertRawAcceleration(aiz);
+        gx = convertRawGyro(gix);
+        gy = convertRawGyro(giy);
+        gz = convertRawGyro(giz);
+        filter.updateIMU(gx, gy, gz, ax, ay, az);
+        heading = filter.getYaw();
+        /*Serial.println(heading);*/
+        microsPrevious = microsPrevious + microsPerReading;
+        }
+    return heading;
+}
+void moveForward(float target,float d){
+  /*unsigned long millisPrev=millis();
+  unsigned long millisNow=millis();
+  do{
+    millisNow=millis();*/
+    analogWrite(pwm_a, vel_pid_d);
+    digitalWrite(der_a,HIGH);
+    digitalWrite(der_b,LOW);
+    analogWrite(pwm_b,vel_pid_i);
+    digitalWrite(izq_a,HIGH);
+    digitalWrite(izq_b,LOW);
+    unsigned long microsNow;
+    microsNow = micros();
+    if (microsNow - microsPrevious >= 100000) {
+      float angle_check = get_motion();
+      error = target - angle_check;      
+      if(error > 300){
+          error = target - (360+angle_check);
+      }
+      if(error < -300){
+          error = (angle_check-(360+target))*-1;
+      }      
+      vel_pid_i = vel_i - (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant));//i+error
+      vel_pid_d = vel_d + (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant)); 
+      error_ant = error;
+      if (vel_pid_i > 255) {
+          vel_pid_i = 255;
+      }
+      if (vel_pid_i < 0) {
+          vel_pid_i = 0;
+      }
+      if (vel_pid_d > 255) {
+          vel_pid_i = 255;
+      }
+      if (vel_pid_d < 0) {
+          vel_pid_d = 0;
+      }
     }
-    if (velIzq < -255) {
-      velIzq = -255;
-    }
-    if (velDer > 255) {
-      velDer = 255;
-    }
-    if (velDer < -255) {
-      velDer = -255;
-    }
-    motor_drive(velDer,velIzq);
+  //}while(millisNow-millisPrev<d*1000);
+  /*analogWrite(pwm_a,0);//apagar motores
+  digitalWrite(der_a,LOW);
+  digitalWrite(der_b,LOW);
+  analogWrite(pwm_b,0);
+  digitalWrite(izq_a,LOW);
+  digitalWrite(izq_b,LOW);*/
 }
 bool lastDir=true,wasWhite=true;//der
 int angleSum=0,checks=0;
@@ -656,13 +733,13 @@ void lineFollower(){
     if(angleSum>90 || angleSum<90){
       plus*=-1;
     }
-    if(wasWhite==true){// && rgb == plat
+    /*if(wasWhite==true){// && rgb == plat
       checks++;
       wasWhite=false;
     }
     if(){//rgb == white
       wasWhite=true;
-    }
+    }*/
   }
   //AVANZA
   if(checks<3){
@@ -728,7 +805,9 @@ void setup(){
 }
   
 void loop(){
-  //rutina zona a
+  /*//rutina zona a
+  setServo(14,180);//guardar
+  setServo(15,75);
   scanMaze(2,5);
   soli=0;
   solveMaze(xRobot,yRobot);
@@ -750,9 +829,9 @@ void loop(){
   goBack(xRobot,yRobot);
   soli=0;
   //rutina rampa
-  elevador.write(60);
-  delay(250);
-  garra.write(80);
+  setServo(14,40);//cerrar
+  delay(500);
+  setServo(15,75);
   downRamp();
   //rutina zona b
   for(int i=1;i<6;i++){
@@ -782,5 +861,9 @@ void loop(){
   goTo(xRobot,yRobot);
   //zona c
   moveTo(3,5,4,5,30);    
-  lineFollower();
+  lineFollower();*/
+  Serial.print("empezo");
+  moveForward(0,1);
+  Serial.print("termino");
+  //delay(100000);
 }

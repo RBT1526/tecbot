@@ -73,5 +73,6 @@ for (int i=0; i<256; i++) {
 
 void loop()
 { //hola
-  leerColor();
+  //leerColor();
+  lcd.print("SEXO");
 }

@@ -18,6 +18,12 @@ void setServo(uint8_t n_servo, int angulo) {
 }
 
 void loop() {  
-    setServo(0,50);//elevador 30 abajo
-    setServo(1,50);//garra 50 abierto
+    setServo(14,40);//14 elevador 40 abajo 180 arriba
+    setServo(15,40);//15 garra 40 abierto 75 cerrado
+
+    setServo(14,40);//abrir
+    setServo(15,40);
+
+    setServo(14,40);//cerrar
+    setServo(15,75);
 }

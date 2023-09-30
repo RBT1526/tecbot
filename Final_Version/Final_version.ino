@@ -67,8 +67,6 @@ float get_motion(){
 void pid_check(float target){
     
     float angle_check = get_motion();
-    
-    
     error = target - angle_check;
     
     if(error > 300){
@@ -77,7 +75,6 @@ void pid_check(float target){
     if(error < -300){
         error = (angle_check-(360+target))*-1;
     }
-    
     
     vel_pid_i = vel_i - (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant));//i+error
     vel_pid_d = vel_d + (Kp*error+Kd*(error-error_ant)+Ki*(error+error_ant)); 
@@ -94,8 +91,6 @@ void pid_check(float target){
     if (vel_pid_d < 0) {
         vel_pid_d = 0;
     }
-
-    
 }
 
 void turn(float targetAngle,float actual_angle){   
