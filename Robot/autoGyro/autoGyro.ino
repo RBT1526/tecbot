@@ -33,8 +33,8 @@ const int standBy = 6;
 float velDer=80,velIzq=80;
 int vel_d = 100;
 int vel_i = 100;
-int vel_pid_d = 0;
-int vel_pid_i = 0;
+int vel_pid_d = 80;
+int vel_pid_i = 80;
 bool flag = false;
 float errores = 0;
 float errores1 = 0;
@@ -688,6 +688,7 @@ void moveForward(float target,float d){
     digitalWrite(izq_a,HIGH);
     digitalWrite(izq_b,LOW);
   digitalWrite(standBy, HIGH);
+
     unsigned long microsNow;
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
@@ -873,7 +874,7 @@ void loop(){
   moveTo(3,5,4,5,30);    
   lineFollower();*/
   Serial.print("empezo");
-  moveForward(0,1);
+  moveForward(180,1);
   Serial.print("termino");
   //delay(100000);
 }
