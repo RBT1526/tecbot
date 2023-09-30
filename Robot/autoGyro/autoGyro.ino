@@ -1,8 +1,15 @@
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
-#include "Adafruit_TCS34725.h"
-#include <CurieIMU.h>
-#include <MadgwickAHRS.h>
+#include <Wire.h>//I2C communication
+#include <LiquidCrystal_I2C.h>//LCD
+#include "Adafruit_TCS34725.h"//sensor rgb TCS34725
+#include <CurieIMU.h>//giroscopio
+#include <MadgwickAHRS.h>//PID
+#include <ezButton.h>//encoder
+#include <Adafruit_PWMServoDriver.h>//servo
+
+//declarar servos
+Adafruit_PWMServoDriver servos = Adafruit_PWMServoDriver(0x40);
+unsigned int pos0=172; // ancho de pulso en cuentas para pocicion 0°
+unsigned int pos180=565; // ancho de pulso en cuentas para la pocicion 180°
 
 //IMU
 Madgwick filter;
@@ -365,7 +372,7 @@ void center(int a,int b){
     return;
 }
 //moverme hacia coordenada
-void moveTo(int x1,int y1,int x2,int y2,int d){
+void moveTo(int x1,int y1,int x2,int y2,float d){
     if(x1==x2){
         //mover en y
         if(y1>y2){
@@ -518,6 +525,10 @@ void downRamp(){
     }while(distFront>43);
     //stop
     center(0,270);
+    orientar(90);
+    garra.write(0);
+    delay(250);
+    elevador.write(180);
     orientar(180);
     return;
 }
@@ -571,7 +582,7 @@ void solveB(int x,int y){
     int y2=y+dy[i];
     if(mazeColores[y2][x2]!=-1 && mazeVisitados[y2][x2]==0 && cubosColocados<3){
         mazeVisitados[y2][x2]=1;
-        moveTo(xRobot,yRobot,x2,y2,15); //moverme 15 y checar color
+        moveTo(xRobot,yRobot,x2,y2,17.5); //moverme 15 y checar color
         if(mazeColores[y2][x2]==0){
           mazeColores[y2][x2]=coloresB();
         }
@@ -579,7 +590,10 @@ void solveB(int x,int y){
             //lo agarro
             mazeColores[y2][x2]=3;
             tengoCubo=true;
-            moveTo(xRobot,yRobot,x2,y2,15);
+            elevador.write(60);//cerrar
+            delay(250);
+            garra.write(80);
+            moveTo(xRobot,yRobot,x2,y2,12.5);
             solveB(x2,y2);
             moveTo(xRobot,yRobot,x,y,-30);
             //fin=false;
@@ -589,9 +603,12 @@ void solveB(int x,int y){
             //lo dejo
             cubosColocados+=1;
             mazeColores[y2][x2]=4;//ya no voy a este cuadro
-            moveTo(xRobot,yRobot,x2,y2,-15);
+            garra.write(0);//abrir
+            delay(250);
+            elevador.write(180);
+            moveTo(xRobot,yRobot,x2,y2,-17.5);
         }else if(mazeColores[y2][x2]==3){
-            moveTo(xRobot,yRobot,x2,y2,15);            
+            moveTo(xRobot,yRobot,x2,y2,12.5);            
             solveB(x2,y2);
             moveTo(xRobot,yRobot,x,y,-30);
         }
@@ -679,10 +696,17 @@ int zonaColor(){
   }
   return 0;
 }
+void setServo(uint8_t n_servo, int angulo) {
+  int duty;
+  duty=map(angulo,0,180,pos0, pos180);
+  servos.setPWM(n_servo, 0, duty);  
+}
 void setup(){
-    Serial.begin(9600);//115200
-//cosas del IMU
-    CurieIMU.begin();
+  Serial.begin(9600);//115200
+  //cosas servos
+  servos.setPWMFreq(60); //Frecuecia PWM de 60Hz o T=16,66ms
+  //cosas del IMU
+  CurieIMU.begin();
   CurieIMU.autoCalibrateGyroOffset();
   CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
   CurieIMU.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
@@ -694,7 +718,7 @@ void setup(){
   CurieIMU.setGyroRange(250);
   microsPerReading = 1000000 / 25;
   microsPrevious = micros();
-//cosas de la pantalla  
+  //cosas de la pantalla  
   if (tcs.begin()) {
     Serial.println("Found sensor");
   } else {
@@ -703,8 +727,8 @@ void setup(){
   }
 }
   
-void loop(){/*
-    //rutina zona a
+void loop(){
+  //rutina zona a
   scanMaze(2,5);
   soli=0;
   solveMaze(xRobot,yRobot);
@@ -726,12 +750,14 @@ void loop(){/*
   goBack(xRobot,yRobot);
   soli=0;
   //rutina rampa
+  elevador.write(60);
+  delay(250);
+  garra.write(80);
   downRamp();
   //rutina zona b
   for(int i=1;i<6;i++){
     for(int j=1;j<4;j++){
         mazeColores[i][j]=0;
-        mazeVisitados[i][j]=0;
     }
   }
   mazeColores[6][3]=-1;
@@ -753,9 +779,8 @@ void loop(){/*
   fin=false;
   soli=0;
   leaveB(xRobot,yRobot);
-  goTo(xRobot,yRobot);*/
-    //zona c
-  //moveTo(3,5,4,5,30);
-    
-    lineFollower();
+  goTo(xRobot,yRobot);
+  //zona c
+  moveTo(3,5,4,5,30);    
+  lineFollower();
 }
