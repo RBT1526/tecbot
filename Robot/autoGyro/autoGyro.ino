@@ -12,7 +12,7 @@ unsigned int pos180=565; // ancho de pulso en cuentas para la pocicion 180°
 
 //IMU
 Madgwick filter;
-unsigned long microsPerReading, microsPrevious;
+unsigned long microsPerReading, microsPrevious,lastMicros;
 float accelScale, gyroScale;
 
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -23,12 +23,12 @@ uint16_t r, g, b, c;
 //PID
 unsigned long micros_inicio;
 unsigned long micros_prev;
-const int pwm_a = 9;
-const int der_a = 8;
-const int der_b = 7;
-const int pwm_b = 3;
-const int izq_a = 4;
-const int izq_b = 5;
+const int pwm_a = 3;
+const int der_a = 4;
+const int der_b = 5;
+const int pwm_b = 9;
+const int izq_a = 8;
+const int izq_b = 7;
 const int standBy = 6;
 float velDer=80,velIzq=70;
 int vel_d = 100;
@@ -401,21 +401,18 @@ void moveTo(int x1,int y1,int x2,int y2,float d){
         //mover en y
         if(y1>y2){
             orientar(0);
-            avanzar();
         }else{
             orientar(180);
-            avanzar();
         }
     }else{
         //mover en x
         if(x1>x2){
             orientar(270);
-            avanzar();
         }else{
             orientar(90);
-            avanzar();
         }
     }
+    avanzar(d);
     xRobot=x2;
     yRobot=y2;
     return;
@@ -463,13 +460,26 @@ void scanMaze(int x,int y){
           }
           orientar(prevO);
           int dist= pow(10,log10(s/1821.2)/-0.65);
-          if(dist<9){
+          if(dist<6){
               //1 si hay pared
+              /*lcd.clear();
+              lcd.setCursor(0,0);
+              lcd.print(i);
+              lcd.setCursor(2,0);
+              lcd.print("hay pared");*/
               mazeParedes[i][y][x]=1;
           }else{
               //2 si no hay
+              /*lcd.clear();
+              lcd.setCursor(0,0);
+              lcd.print(i);
+              lcd.setCursor(2,0);
+              lcd.print("no hay pared");*/
               mazeParedes[i][y][x]=2;
           }
+          /*lcd.setCursor(0,1);
+          lcd.print(dist);
+          delay(2000);*/
         }
     }
   for(int i=0;i<4;i++){ //moverme a cada direccion
@@ -764,17 +774,23 @@ void pid_check(float target){
     Serial.println(error);
     */
 }
-void avanzar(){
+void avanzar(float d){
     analogWrite(pwm_a, vel_pid_d);
     digitalWrite(der_a,HIGH);
     digitalWrite(der_b,LOW);
     analogWrite(pwm_b,vel_pid_i);
     digitalWrite(izq_a,HIGH);
     digitalWrite(izq_b,LOW);
-    if (micros() - microsPrevious >= 50000) {
-        pid_check(target_angle);
-        microsPrevious = micros();
+    unsigned long microsYa=micros();
+    target_angle=get_motion();
+    while(microsYa-lastMicros<1000000*d/16){
+      if (micros() - microsPrevious >= 50000) {
+          pid_check(target_angle);
+          microsPrevious = micros();
+      }      
+      microsYa=micros();
     }
+    stop();
 }
 void stop(){
     analogWrite(pwm_a, 0);
@@ -788,23 +804,31 @@ bool lastDir=true,wasWhite=true;//der
 int angleSum=0,checks=0;
 void lineFollower(){
   tcs.getRawData(&r, &g, &b, &c);
-  int headingInicial=get_motion();
+  //int headingInicial=get_motion();
   int plus=1;
-  while(r>4000 && g>8000 && b>5000){
+  lcd.clear();
+  while(r>6000 && g>14000 && b>7000){
+    tcs.getRawData(&r, &g, &b, &c);
     turn(plus);
     angleSum+=plus;
-    if(angleSum>90 || angleSum<90){
+    if(angleSum>90 || angleSum<-90){
       plus*=-1;
+      delay(25);
     }
-    /*if(wasWhite==true){// && rgb == plat
+    lcd.setCursor(0,0);  
+    lcd.print(angleSum);
+    if(wasWhite==true && r<12000 && g<23000 && b>17000){// && rgb == plat
       checks++;
       wasWhite=false;
+      lcd.clear();
+      lcd.setCursor(0,0);  
+      lcd.print(checks);
     }
-    if(){//rgb == white
+    if(r>12000 && g>23000 && b>17000){//rgb == white
       wasWhite=true;
-    }*/
+    }
   }
-  avanzar();//CAMBIAR CUANTO
+  avanzar(10);//CAMBIAR CUANTO
   if(checks<3){
     lineFollower();
   }
@@ -817,7 +841,7 @@ int zonaColor(){
     delay(25);
   }
   lcd.clear();
-  lcd.setCursor(0,0);  
+  lcd.setCursor(0,0);
     //checar el color (amarillo 1, azul claro 2, rosa 3, violeta 4)
   if(r>10000 && g>13000 && b>4000){
     lcd.print("CHECK 1");
@@ -898,11 +922,15 @@ void setup(){
     Serial.println("No TCS34725 found ... check your connections");
     while (1);
   }
-
+  lcd.clear();
+  lcd.setCursor(0,0);  
+  lcd.print("setupFin");
+  lastMicros=micros();
 }
   
 void loop(){
   int z=zonaColor();
+  z=4;
   if(z==1){
     //rutina zona a
     lcd.clear();
@@ -930,7 +958,7 @@ void loop(){
     goTo(3,0);
     goBack(xRobot,yRobot);
     soli=0;
-  }else if(z==2){
+    }else if(z==2){
     //rutina rampa
     lcd.clear();
     lcd.setCursor(0,0);  
@@ -969,20 +997,17 @@ void loop(){
     soli=0;
     leaveB(xRobot,yRobot);
     goTo(xRobot,yRobot);
+  }else if(z==4){
+    //zona c
+    lcd.clear();
+    lcd.setCursor(0,0);  
+    lcd.print("ZONA C");
+    //moveTo(3,5,4,5,30);    
+    lineFollower();
   }
-  //zona c
-  lcd.clear();
-  lcd.setCursor(0,0);  
-  lcd.print("ZONA C");
-  moveTo(3,5,4,5,30);    
-  lineFollower();
-  int lastMicros=micros();
-  int microsYa=micros();
-  target_angle=get_motion();
-  while(microsYa-lastMicros<1000000){
-    avanzar();
-    microsYa=micros();
-  }
-  stop();
-  delay(100000);
+    delay(100000);
 }
+//1s = 16cm
+//0.9375s = 15cm
+//1.09375s = 17.5
+//1.875s = 30cm
