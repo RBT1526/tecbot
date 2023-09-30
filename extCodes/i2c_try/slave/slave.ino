@@ -1,6 +1,6 @@
 //Receiver code
  #include <SoftwareSerial.h>
- SoftwareSerial link(11, 10); // Rx, Tx
+ SoftwareSerial link(10, 11); // Rx, Tx
   
   int c;
 

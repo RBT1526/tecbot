@@ -687,6 +687,7 @@ void moveForward(float target,float d){
     analogWrite(pwm_b,vel_pid_i);
     digitalWrite(izq_a,HIGH);
     digitalWrite(izq_b,LOW);
+  digitalWrite(standBy, HIGH);
     unsigned long microsNow;
     microsNow = micros();
     if (microsNow - microsPrevious >= 100000) {
@@ -779,6 +780,14 @@ void setServo(uint8_t n_servo, int angulo) {
   servos.setPWM(n_servo, 0, duty);  
 }
 void setup(){
+  pinMode(standBy, OUTPUT);
+    pinMode(pwm_a, OUTPUT);
+    pinMode(der_a, OUTPUT);
+    pinMode(der_b, OUTPUT);
+    pinMode(pwm_b, OUTPUT);
+    pinMode(izq_a, OUTPUT);
+    pinMode(izq_b, OUTPUT);
+    digitalWrite(standBy, LOW);
   Serial.begin(9600);//115200
   //cosas servos
   servos.setPWMFreq(60); //Frecuecia PWM de 60Hz o T=16,66ms
@@ -802,6 +811,7 @@ void setup(){
     Serial.println("No TCS34725 found ... check your connections");
     while (1);
   }
+
 }
   
 void loop(){

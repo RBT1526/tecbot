@@ -8,9 +8,9 @@
 
 //encoder stuff
 #include <ezButton.h>
-#define CLK_PIN 2//change
-#define DT_PIN 3
-#define SW_PIN 4
+#define CLK_PIN 6//change
+#define DT_PIN 5
+#define SW_PIN 7
 #define DIRECTION_CW 0   // clockwise direction
 #define DIRECTION_CCW 1  // counter-clockwise direction
 int counter = 0;
